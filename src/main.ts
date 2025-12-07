@@ -1,8 +1,8 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { AppConfig } from './app.config';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; // Import Swagger
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'; // Import Swagger
+import { AppConfig } from './app.config';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +11,8 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
+      // Added to allow partial type DTOs
+      skipMissingProperties: true
     }),
   );
   // Swagger configuration
