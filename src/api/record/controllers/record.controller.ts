@@ -8,9 +8,7 @@ import {
   Post,
   Query
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { Model } from 'mongoose';
 import { CreateRecordRequestDto } from '../dtos/create-record.request.dto';
 import { RecordResponseDto } from '../dtos/record-response.dto';
 import { SearchRecordRequestDto } from '../dtos/search-record.request.dto';
@@ -22,7 +20,6 @@ import { RecordService } from '../services/record.service';
 @Controller('records')
 export class RecordController {
   constructor(
-    @InjectModel('Record') private readonly recordModel: Model<Record>,
     @Inject(RecordService) private readonly recordService: RecordService
   ) { }
 
@@ -45,7 +42,7 @@ export class RecordController {
     type: CreateRecordRequestDto,
   })
   @ApiResponse({ status: 200, description: 'Record updated successfully', type: RecordResponseDto })
-  @ApiResponse({ status: 500, description: 'Cannot find record to update' })
+  @ApiResponse({ status: 404, description: 'Cannot find record to update' })
   async update(
     @Param('id') id: string,
     @Body() request: UpdateRecordRequestDto,
