@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateRecordRequestDto } from '../dtos/create-record.request.dto';
@@ -14,8 +14,7 @@ export class RecordService {
     constructor(
         @InjectModel(Record.name)
         private readonly recordModel: Model<RecordHydrated>
-    ) 
-    {}
+    ) { }
 
     async create(request: CreateRecordRequestDto) {
         const newRecord = await this.recordModel.create(request);
@@ -25,7 +24,7 @@ export class RecordService {
     async update(id: string, request: UpdateRecordRequestDto) {
         const record = await this.recordModel.findById(id);
         if (!record) {
-            throw new InternalServerErrorException('Record not found');
+            throw new NotFoundException('Record not found');
         }
 
         Object.assign(record, request);
@@ -41,14 +40,14 @@ export class RecordService {
     async findAll(filters: SearchRecordRequestDto): Promise<SearchRecordResponseDto> {
         console.log(filters);
         const { query: textFilter, artist, album, format, category, price, mbid, limit, page } = filters;
-        
+
         const query: any = {};
 
         // General query that matches artist, album
         if (textFilter) {
             query.$or = [
-                { artist: { $regex: textFilter, $options: 'i' } },
-                { album: { $regex: textFilter, $options: 'i' } },
+                { artist: { $text: textFilter, $options: 'i' } },
+                { album: { $text: textFilter, $options: 'i' } },
             ];
         }
 
@@ -76,21 +75,26 @@ export class RecordService {
             query.mbid = mbid;
         }
 
-        const [results, count] = await Promise.all([
-            this.recordModel.find(query)
-                .lean<RecordResponseDto[]>()
-                .skip((page-1)*limit)
-                .limit(limit)
-                .exec(),
-            this.recordModel.find(query)
-                .countDocuments(),
-        ]);
+        try {
+            const [results, count] = await Promise.all([
+                this.recordModel.find(query)
+                    .lean<RecordResponseDto[]>()
+                    .skip((page - 1) * limit)
+                    .limit(limit)
+                    .exec(),
+                this.recordModel.find(query)
+                    .countDocuments(),
+            ]);
 
-        return {
-            results,
-            count, 
-            page: page,
-            totalPages: Math.ceil(count / limit),
-        };
+            return {
+                results,
+                count,
+                page: page,
+                totalPages: Math.ceil(count / limit),
+            };
+
+        } catch (error) {
+            throw new InternalServerErrorException('Error filtering records')
+        }
     }
 }

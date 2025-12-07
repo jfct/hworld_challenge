@@ -24,7 +24,7 @@ export class Record extends Document implements IRecord {
   @Prop({ required: true })
   artist: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true })
   album: string;
 
   @Prop({ required: true, index: true })
@@ -50,3 +50,14 @@ export const RecordSchema = SchemaFactory.createForClass(Record)
 // single key index for these
 RecordSchema.index({ artist: 1, album: 1, format: 1 }, { unique: true })
 RecordSchema.index({ category: 1, format: 1 })
+
+// Text index due to search query field
+RecordSchema.index(
+  {
+    artist: 'text',
+    album: 'text',
+  },
+  {
+    name: 'record_artist_album_index',
+  },
+);
