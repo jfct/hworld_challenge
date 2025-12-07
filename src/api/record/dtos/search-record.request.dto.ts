@@ -1,5 +1,5 @@
 import { ApiPropertyOptional, IntersectionType, OmitType, PartialType } from "@nestjs/swagger";
-import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString } from "class-validator";
 import { PaginationDto } from "../../utils/dtos/pagination.dto";
 import { RecordCategory, RecordFormat } from "../enums/record.enum";
 import { BaseRecordDto } from "./base-record.dto";
@@ -25,7 +25,6 @@ export class SearchRecordRequestDto extends IntersectionType(
         example: [RecordCategory.ROCK],
         required: false
     })
-    @IsArray()
     @IsEnum(RecordCategory, { each: true })
     @IsOptional()
     category?: RecordCategory[];
@@ -38,7 +37,6 @@ export class SearchRecordRequestDto extends IntersectionType(
         example: [RecordFormat.VINYL],
         required: false
     })
-    @IsArray()
     @IsEnum(RecordFormat, { each: true })
     @IsOptional()
     format?: RecordFormat[];
