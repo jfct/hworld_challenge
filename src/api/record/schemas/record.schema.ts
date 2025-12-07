@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument } from 'mongoose';
 import { RecordCategory, RecordFormat } from '../enums/record.enum';
 
-export type RecordDocument = HydratedDocument<Record>;
+export type RecordHydrated = HydratedDocument<Record>;
 
 export interface IRecord {
   artist: string;
@@ -16,8 +16,8 @@ export interface IRecord {
 
 @Schema({
   timestamps: {
-    createdAt: 'created',  // Custom name for creation timestamp
-    updatedAt: 'lastModified',  // Custom name for update timestamp
+    createdAt: 'created',
+    updatedAt: 'lastModified',
   }
 })
 export class Record extends Document implements IRecord {

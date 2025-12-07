@@ -1,9 +1,13 @@
-import { ApiPropertyOptional, OmitType, PartialType } from "@nestjs/swagger";
+import { ApiPropertyOptional, IntersectionType, OmitType, PartialType } from "@nestjs/swagger";
 import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
+import { PaginationDto } from "../../utils/dtos/pagination.dto";
 import { RecordCategory, RecordFormat } from "../enums/record.enum";
 import { BaseRecordDto } from "./base-record.dto";
 
-export class SearchRecordRequestDto extends PartialType(OmitType(BaseRecordDto, ['format', 'category'] as const),) {
+export class SearchRecordRequestDto extends IntersectionType(
+    PartialType(OmitType(BaseRecordDto, ['format', 'category', 'qty'] as const)),
+    PaginationDto
+ ) {
     @ApiPropertyOptional({
         description: 'A general query that can match artist or album',
         type: String,

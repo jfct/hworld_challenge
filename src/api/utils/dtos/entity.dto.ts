@@ -1,7 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { BaseRecordDto } from './base-record.dto';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class RecordResponseDto extends BaseRecordDto {
+export class EntityDto {
     @ApiProperty({
         description: 'MongoDB document ID',
         type: String,
@@ -9,26 +8,24 @@ export class RecordResponseDto extends BaseRecordDto {
     })
     _id: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'Creation timestamp',
-        type: String,
+        type: Date,
         example: '2024-01-01T00:00:00.000Z',
     })
-    created: Date;
+    created?: Date;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'Last modification timestamp',
-        type: String,
+        type: Date,
         example: '2024-01-01T00:00:00.000Z',
     })
-    lastModified: Date;
+    lastModified?: Date;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'Mongoose version key',
         type: Number,
         example: 0,
-        required: false,
     })
     __v?: number;
 }
-

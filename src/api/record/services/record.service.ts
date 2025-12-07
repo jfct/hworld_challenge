@@ -2,16 +2,20 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateRecordRequestDto } from '../dtos/create-record.request.dto';
+import { RecordResponseDto } from '../dtos/record-response.dto';
 import { SearchRecordRequestDto } from '../dtos/search-record.request.dto';
+import { SearchRecordResponseDto } from '../dtos/search-record.response.dto';
 import { UpdateRecordRequestDto } from '../dtos/update-record.request.dto';
-import { Record, RecordDocument } from '../schemas/record.schema';
+import { Record, RecordHydrated } from '../schemas/record.schema';
 
 @Injectable()
 export class RecordService {
 
     constructor(
-        @InjectModel(Record.name) private readonly recordModel: Model<RecordDocument>
-    ) { }
+        @InjectModel(Record.name)
+        private readonly recordModel: Model<RecordHydrated>
+    ) 
+    {}
 
     async create(request: CreateRecordRequestDto) {
         const newRecord = await this.recordModel.create(request);
@@ -34,42 +38,59 @@ export class RecordService {
         return updated.toObject();
     }
 
-    async findAll(filters: SearchRecordRequestDto) {
-        // Use .lean() to get plain objects instead of Mongoose documents
-        const allRecords = await this.recordModel.find().lean().exec();
+    async findAll(filters: SearchRecordRequestDto): Promise<SearchRecordResponseDto> {
+        console.log(filters);
+        const { query: textFilter, artist, album, format, category, price, mbid, limit, page } = filters;
+        
+        const query: any = {};
 
-        const { query: q, artist, album, format, category } = filters;
+        // General query that matches artist, album
+        if (textFilter) {
+            query.$or = [
+                { artist: { $regex: textFilter, $options: 'i' } },
+                { album: { $regex: textFilter, $options: 'i' } },
+            ];
+        }
 
-        const filteredRecords = allRecords.filter((record: any) => {
-            let match = true;
+        if (artist) {
+            query.artist = { $regex: artist, $options: 'i' };
+        }
 
-            if (q) {
-                match =
-                    match &&
-                    (record.artist.includes(q) ||
-                        record.album.includes(q) ||
-                        record.category.includes(q));
-            }
+        if (album) {
+            query.album = { $regex: album, $options: 'i' };
+        }
 
-            if (artist) {
-                match = match && record.artist.includes(artist);
-            }
+        if (format && format.length > 0) {
+            query.format = { $in: format };
+        }
 
-            if (album) {
-                match = match && record.album.includes(album);
-            }
+        if (category && category.length > 0) {
+            query.category = { $in: category };
+        }
 
-            if (format && format.length > 0) {
-                match = match && format.includes(record.format);
-            }
+        if (price !== undefined) {
+            query.price = price;
+        }
 
-            if (category && category.length > 0) {
-                match = match && category.includes(record.category);
-            }
+        if (mbid) {
+            query.mbid = mbid;
+        }
 
-            return match;
-        });
+        const [results, count] = await Promise.all([
+            this.recordModel.find(query)
+                .lean<RecordResponseDto[]>()
+                .skip((page-1)*limit)
+                .limit(limit)
+                .exec(),
+            this.recordModel.find(query)
+                .countDocuments(),
+        ]);
 
-        return filteredRecords;
+        return {
+            results,
+            count, 
+            page: page,
+            totalPages: Math.ceil(count / limit),
+        };
     }
 }

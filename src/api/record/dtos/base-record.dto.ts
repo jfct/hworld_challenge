@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 import { RecordCategory, RecordFormat } from "../enums/record.enum";
+import { IRecord } from "../schemas/record.schema";
 
-export class BaseRecordDto {
+export class BaseRecordDto implements IRecord {
     @ApiProperty({
         description: 'Artist of the record',
         type: String,
