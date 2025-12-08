@@ -9,14 +9,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { SearchRecordRequestDto } from 'src/api/record/dtos/search-record.request.dto';
 import { CreateOrderRequestDto } from '../dtos/create-order.request.dto';
 import { OrderResponseDto } from '../dtos/order-response.dto';
 import { SearchOrderRequestDto } from '../dtos/search-order.request.dto';
 import { UpdateOrderRequestDto } from '../dtos/update-order.request.dto';
 import { OrderService } from '../services/order.service';
 
-@Controller()
+@Controller('orders')
 export class OrderController {
   constructor(
     @Inject(OrderService)
@@ -65,7 +64,18 @@ export class OrderController {
     description: 'List of records',
     type: SearchOrderRequestDto,
   })
-  async findAll(@Query() filters: SearchRecordRequestDto) {
+  async findAll(@Query() filters: SearchOrderRequestDto) {
     return this.orderService.findAll(filters);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get all orders with optional filters' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of records',
+    type: OrderResponseDto,
+  })
+  async findById(@Query('id') id: string) {
+    return this.orderService.findById(id);
   }
 }

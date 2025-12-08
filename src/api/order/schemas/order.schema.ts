@@ -1,29 +1,31 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import { OrderStatus } from '../enums/order-status.enum';
-
-export interface IOrder {
-  recordId: string;
-  quantity: number;
-  status: OrderStatus;
-}
+import {
+  IOrderRecordItem,
+  OrderRecordItem,
+  OrderRecordItemSchema,
+} from './order-record-item.schema';
+import { Document, HydratedDocument, Types } from 'mongoose';
 
 export type OrderHydrated = HydratedDocument<Order>;
 
+export interface IOrder<T = Types.ObjectId> {
+  items: IOrderRecordItem<T>[];
+  status: OrderStatus;
+}
+
 @Schema({
+  collection: 'orders',
   timestamps: {
     createdAt: 'created',
     updatedAt: 'lastModified',
   },
 })
-export class Order extends Document implements IOrder {
-  @Prop({ required: true })
-  recordId: string;
+export class Order extends Document implements IOrder<Types.ObjectId> {
+  @Prop({ type: [OrderRecordItemSchema], required: true })
+  items: OrderRecordItem[];
 
-  @Prop({ required: true })
-  quantity: number;
-
-  @Prop({ enum: OrderStatus, required: true })
+  @Prop({ enum: OrderStatus, required: true, default: OrderStatus.PENDING })
   status: OrderStatus;
 }
 

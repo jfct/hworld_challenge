@@ -2,9 +2,14 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppConfig } from './app.config';
 import { RecordModule } from './api/record/record.module';
+import { OrderModule } from './api/order/order.module';
 
 @Module({
-  imports: [MongooseModule.forRoot(AppConfig.mongoUrl), RecordModule],
+  imports: [
+    MongooseModule.forRoot(AppConfig.mongoUrl),
+    RecordModule,
+    OrderModule,
+  ],
   controllers: [],
   providers: [],
 })

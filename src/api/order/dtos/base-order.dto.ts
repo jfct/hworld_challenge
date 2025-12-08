@@ -1,21 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayMinSize, IsArray, IsEnum, ValidateNested } from 'class-validator';
 import { OrderStatus } from '../enums/order-status.enum';
 import { IOrder } from '../schemas/order.schema';
+import { OrderItemDto } from './base-order-item.dto';
 
-export class BaseOrderDto implements IOrder {
+export class BaseOrderDto implements IOrder<string> {
   @ApiProperty({
-    description: 'The record id connected to this order',
-    type: String,
+    description: 'List of items in this order',
+    type: [OrderItemDto],
   })
-  @IsString()
-  @IsNotEmpty()
-  recordId: string;
-
-  @ApiProperty({ description: 'Number of records ordered', type: Number })
-  @IsNumber()
-  @Min(1)
-  quantity: number;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items: OrderItemDto[];
 
   @ApiProperty({ description: 'Current order status', enum: OrderStatus })
   @IsEnum(OrderStatus)
