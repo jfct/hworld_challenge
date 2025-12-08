@@ -82,12 +82,9 @@ export class RecordService {
       query._id = id;
     }
 
-    // General query that matches artist, album
+    // General query that matches artist, album (Uses text index)
     if (textFilter) {
-      query.$or = [
-        { artist: { $text: textFilter, $options: 'i' } },
-        { album: { $text: textFilter, $options: 'i' } },
-      ];
+      query.$text = { $search: textFilter };
     }
 
     if (artist) {
@@ -136,7 +133,9 @@ export class RecordService {
         totalPages: Math.ceil(count / limit),
       };
     } catch (error) {
-      throw new InternalServerErrorException('Error filtering records');
+      throw new InternalServerErrorException(
+        `Internal error filtering records: ${error}`,
+      );
     }
   }
 }
