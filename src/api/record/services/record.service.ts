@@ -25,16 +25,13 @@ export class RecordService {
   }
 
   async update(id: string, request: UpdateRecordRequestDto) {
-    const record = await this.recordModel.findById(id);
-    if (!record) {
-      throw new NotFoundException('Record not found');
-    }
+    const updated = await this.recordModel.findByIdAndUpdate(id, request, {
+      new: true,
+      runValidators: true,
+    });
 
-    Object.assign(record, request);
-
-    const updated = await record.save();
     if (!updated) {
-      throw new InternalServerErrorException('Failed to update record');
+      throw new NotFoundException('Record not found');
     }
 
     return updated.toObject();

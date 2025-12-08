@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateOrderRequestDto } from '../dtos/create-order.request.dto';
@@ -10,12 +10,26 @@ import { Order, OrderHydrated } from '../schemas/order.schema';
 export class OrderService {
   constructor(
     @InjectModel(Order.name)
-    private readonly recordModel: Model<OrderHydrated>,
+    private readonly orderModel: Model<OrderHydrated>,
   ) {}
 
-  async create(request: CreateOrderRequestDto) {}
+  async create(request: CreateOrderRequestDto) {
+    const newOrder = await this.orderModel.create(request);
+    return newOrder.toObject();
+  }
 
-  async update(id: string, request: UpdateOrderRequestDto) {}
+  async update(id: string, request: UpdateOrderRequestDto) {
+    const updated = await this.orderModel.findByIdAndUpdate(id, request, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updated) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return updated.toObject();
+  }
 
   async findAll(filters: SearchOrderRequestDto) {}
 }
