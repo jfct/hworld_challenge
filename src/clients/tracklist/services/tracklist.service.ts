@@ -9,7 +9,7 @@ export class TracklistService {
 
   async getRecord(
     mbid: string,
-    adapterType: AdapterType = AdapterType.MUSICBRAINZ,
+    adapterType: AdapterType = AdapterType.HTTP_MUSICBRAINZ,
   ): Promise<RecordTracklistResponseDto> {
     const adapter = this.adapterFactory.getAdapter(adapterType);
     return adapter.getRecordTrackList(mbid);

@@ -1,3 +1,4 @@
 export enum AdapterType {
-  MUSICBRAINZ = 'musicbrainz',
+  MUSICBRAINZ_CLIENT = 'musicbrainz-client',
+  HTTP_MUSICBRAINZ = 'http-musicbrainz',
 }

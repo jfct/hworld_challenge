@@ -7,6 +7,7 @@ import { TrackDetailsDto } from '../dtos/track-details.dto';
 
 /**
  * MusicBrainz implementation of the tracklist adapter
+ * Uses the MusicBrainz JS API client that they share
  * Wraps the musicbrainz-api npm package
  */
 @Injectable()
@@ -15,9 +16,9 @@ export class MusicBrainzAdapter implements ITracklistAdapter {
 
   constructor() {
     this.musicBrainzApi = new MusicBrainzApi({
-      appName: 'hworld_challenge',
-      appVersion: '0.1.0',
-      appContactInfo: env.CONTACT_EMAIL,
+      appName: env.APPLICATION_NAME ?? 'hworld_challenge',
+      appVersion: env.APPLICATION_VERSION ?? '0.1.0',
+      appContactInfo: env.CONTACT_EMAIL ?? '',
     });
   }
 
