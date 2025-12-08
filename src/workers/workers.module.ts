@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { env } from 'process';
 import { TracklistSyncService } from './tracklist-sync/tracklist-sync.service';
 import { TracklistSyncProcessor } from './tracklist-sync/tracklist-sync.processor';
 import { TrackListModule } from '../clients/tracklist/tracklist.module';
-import { RecordModule } from '../api/record/record.module';
+import { RecordModule } from 'src/api/record/record.module';
 
 @Module({
   imports: [
@@ -23,8 +23,8 @@ import { RecordModule } from '../api/record/record.module';
         duration: 1000,
       },
     }),
-    TrackListModule,
-    RecordModule,
+    forwardRef(() => RecordModule),
+    forwardRef(() => TrackListModule),
   ],
   providers: [TracklistSyncService, TracklistSyncProcessor],
   exports: [TracklistSyncService],

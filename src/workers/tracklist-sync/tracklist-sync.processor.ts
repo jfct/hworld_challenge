@@ -1,17 +1,15 @@
 import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bullmq';
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Record } from '../../api/record/schemas/record.schema';
 import { TracklistAdapterFactory } from '../../clients/tracklist/adapters/tracklist-adapter.factory';
 import { TracklistSyncJobData } from './tracklist-sync.service';
+import { RecordService } from 'src/api/record/services/record.service';
 
 @Processor('tracklist-sync')
 @Injectable()
 export class TracklistSyncProcessor {
   constructor(
-    @InjectModel(Record.name) private recordModel: Model<Record>,
+    private readonly recordService: RecordService,
     private readonly adapterFactory: TracklistAdapterFactory,
   ) {}
 
@@ -20,7 +18,7 @@ export class TracklistSyncProcessor {
     const { recordId, mbid, adapterType } = job.data;
 
     try {
-      const record = await this.recordModel.findById(recordId);
+      const record = await this.recordService.findById(recordId);
       if (!record) {
         throw new Error(`Record ${recordId} not found`);
       }
@@ -41,7 +39,7 @@ export class TracklistSyncProcessor {
           position: track.position,
           releaseDate: track.release_data,
         }));
-        record.tracksSyncedAt = new Date();
+        record.tracksSyncedAt = new Date().toISOString();
 
         await record.save();
       }
