@@ -30,3 +30,9 @@ export class Order extends Document implements IOrder<Types.ObjectId> {
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
+
+// Assumed most searched indexes
+// Status and created, possible latest orders
+// By records, we have this field specifically in service to search
+OrderSchema.index({ status: 1, created: -1 });
+OrderSchema.index({ 'items.record': 1 });
