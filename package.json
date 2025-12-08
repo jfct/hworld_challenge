@@ -22,18 +22,22 @@
     "setup:db": "ts-node -r tsconfig-paths/register setup-db.ts"
   },
   "dependencies": {
+    "@nestjs/bull": "^11.0.4",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/mongoose": "^11.0.1",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/swagger": "^11.0.6",
+    "bullmq": "^5.65.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.7",
     "mongoose": "^8.11.0",
+    "musicbrainz-api": "^0.27.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
@@ -43,6 +47,7 @@
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
     "@types/supertest": "^2.0.12",
+    "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",
