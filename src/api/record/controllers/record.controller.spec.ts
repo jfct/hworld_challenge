@@ -3,7 +3,7 @@ import { RecordController } from './record.controller';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Record } from '../schemas/record.schema';
-import { CreateRecordRequestDTO } from '../dtos/create-record.request.dto';
+import { CreateRecordRequestDto } from '../dtos/create-record.request.dto';
 import { RecordCategory, RecordFormat } from '../enums/record.enum';
 
 describe('RecordController', () => {
@@ -33,7 +33,7 @@ describe('RecordController', () => {
   });
 
   it('should create a new record', async () => {
-    const createRecordDto: CreateRecordRequestDTO = {
+    const createRecordDto: CreateRecordRequestDto = {
       artist: 'Test',
       album: 'Test Record',
       price: 100,
@@ -73,7 +73,7 @@ describe('RecordController', () => {
       exec: jest.fn().mockResolvedValue(records),
     } as any);
 
-    const result = await recordController.findAll();
+    const result = await recordController.findAll({});
     expect(result).toEqual(records);
     expect(recordModel.find).toHaveBeenCalled();
   });

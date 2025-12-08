@@ -4,7 +4,6 @@ import { RecordController } from './controllers/record.controller';
 import { RecordSchema } from './schemas/record.schema';
 import { RecordService } from './services/record.service';
 
-
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Record', schema: RecordSchema }]),
@@ -12,4 +11,4 @@ import { RecordService } from './services/record.service';
   controllers: [RecordController],
   providers: [RecordService],
 })
-export class RecordModule { }
+export class RecordModule {}

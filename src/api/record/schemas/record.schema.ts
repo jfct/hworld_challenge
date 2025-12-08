@@ -18,7 +18,7 @@ export interface IRecord {
   timestamps: {
     createdAt: 'created',
     updatedAt: 'lastModified',
-  }
+  },
 })
 export class Record extends Document implements IRecord {
   @Prop({ required: true })
@@ -43,13 +43,13 @@ export class Record extends Document implements IRecord {
   mbid?: string;
 }
 
-export const RecordSchema = SchemaFactory.createForClass(Record)
+export const RecordSchema = SchemaFactory.createForClass(Record);
 
 // Indexes for assumed most used combinations
-// Artist and category are the first of the composites so we can skip the 
+// Artist and category are the first of the composites so we can skip the
 // single key index for these
-RecordSchema.index({ artist: 1, album: 1, format: 1 }, { unique: true })
-RecordSchema.index({ category: 1, format: 1 })
+RecordSchema.index({ artist: 1, album: 1, format: 1 }, { unique: true });
+RecordSchema.index({ category: 1, format: 1 });
 
 // Text index due to search query field
 RecordSchema.index(

@@ -6,7 +6,7 @@ import {
   Param,
   Patch,
   Post,
-  Query
+  Query,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateRecordRequestDto } from '../dtos/create-record.request.dto';
@@ -20,8 +20,8 @@ import { RecordService } from '../services/record.service';
 @Controller('records')
 export class RecordController {
   constructor(
-    @Inject(RecordService) private readonly recordService: RecordService
-  ) { }
+    @Inject(RecordService) private readonly recordService: RecordService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new record' })
@@ -29,7 +29,11 @@ export class RecordController {
     description: 'Payload describing the items to be ordered.',
     type: CreateRecordRequestDto,
   })
-  @ApiResponse({ status: 201, description: 'Record successfully created', type: RecordResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Record successfully created',
+    type: RecordResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async create(@Body() request: CreateRecordRequestDto): Promise<Record> {
     return this.recordService.create(request);
@@ -41,7 +45,11 @@ export class RecordController {
     description: 'Payload describing the items to be ordered.',
     type: CreateRecordRequestDto,
   })
-  @ApiResponse({ status: 200, description: 'Record updated successfully', type: RecordResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Record updated successfully',
+    type: RecordResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Cannot find record to update' })
   async update(
     @Param('id') id: string,
@@ -57,9 +65,7 @@ export class RecordController {
     description: 'List of records',
     type: SearchRecordResponseDto,
   })
-  async findAll(
-    @Query() request: SearchRecordRequestDto,
-  ) {
+  async findAll(@Query() request: SearchRecordRequestDto) {
     return this.recordService.findAll(request);
   }
 }
