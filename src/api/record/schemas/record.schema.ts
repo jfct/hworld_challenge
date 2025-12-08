@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument } from 'mongoose';
 import { RecordCategory, RecordFormat } from '../enums/record.enum';
+import { TrackInfo, TrackInfoSchema } from './track-info.schema';
 
 export type RecordHydrated = HydratedDocument<Record>;
 
@@ -12,6 +13,8 @@ export interface IRecord {
   format: RecordFormat;
   category: RecordCategory;
   mbid?: string;
+  tracks?: TrackInfo[];
+  tracksSyncedAt?: Date;
 }
 
 @Schema({
@@ -42,6 +45,12 @@ export class Record extends Document implements IRecord {
 
   @Prop({ required: false, index: true })
   mbid?: string;
+
+  @Prop({ type: [TrackInfoSchema], required: false })
+  tracks?: TrackInfo[];
+
+  @Prop({ required: false })
+  tracksSyncedAt?: Date;
 }
 
 export const RecordSchema = SchemaFactory.createForClass(Record);

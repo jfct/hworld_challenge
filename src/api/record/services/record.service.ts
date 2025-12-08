@@ -54,7 +54,7 @@ export class RecordService {
       limit = PAGINATION_LIMIT_VALUE,
       page = 1,
     } = filters;
-
+    const skip = (page - 1) * limit;
     const query: any = {};
 
     if (id) {
@@ -98,10 +98,10 @@ export class RecordService {
         this.recordModel
           .find(query)
           .lean<RecordResponseDto[]>()
-          .skip((page - 1) * limit)
+          .skip(skip)
           .limit(limit)
           .exec(),
-        this.recordModel.find(query).countDocuments(),
+        this.recordModel.find(query).countDocuments().exec(),
       ]);
 
       return {
