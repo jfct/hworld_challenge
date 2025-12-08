@@ -12,4 +12,10 @@ export class OrderResponseDto extends IntersectionType(
     type: [OrderItemResponseDto],
   })
   items: OrderItemResponseDto[];
+
+  @ApiProperty({
+    description: 'Total price for the entire order',
+    type: Number,
+  })
+  totalPrice: number;
 }

@@ -12,5 +12,6 @@ import { WorkersModule } from 'src/workers/workers.module';
   ],
   controllers: [RecordController],
   providers: [RecordService],
+  exports: [RecordService],
 })
 export class RecordModule {}

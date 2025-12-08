@@ -12,7 +12,7 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       // Added to allow partial type DTOs
-      skipMissingProperties: true
+      skipMissingProperties: true,
     }),
   );
   // Swagger configuration

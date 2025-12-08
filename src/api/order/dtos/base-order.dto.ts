@@ -19,4 +19,10 @@ export class BaseOrderDto implements IOrder<string> {
   @ApiProperty({ description: 'Current order status', enum: OrderStatus })
   @IsEnum(OrderStatus)
   status: OrderStatus;
+
+  @ApiProperty({
+    description: 'Total price for the entire order (calculated automatically)',
+    type: Number,
+  })
+  totalPrice: number;
 }

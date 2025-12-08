@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateOrderRequestDto } from '../dtos/create-order.request.dto';
@@ -8,16 +13,32 @@ import { Order, OrderHydrated } from '../schemas/order.schema';
 import { PAGINATION_LIMIT_VALUE } from 'src/api/utils/settings/pagination-settings';
 import { OrderResponseDto } from '../dtos/order-response.dto';
 import { SearchOrderResponseDto } from '../dtos/search-order.response.dto';
+import { RecordService } from 'src/api/record/services/record.service';
+import { RecordResponseDto } from 'src/api/record/dtos/record-response.dto';
+import { OrderItemDto } from '../dtos/base-order-item.dto';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name)
     private readonly orderModel: Model<OrderHydrated>,
+    private readonly recordService: RecordService,
   ) {}
 
   async create(request: CreateOrderRequestDto) {
-    const newOrder = await this.orderModel.create(request);
+    const recordIds = request.items.map((item) => item.record.toString());
+
+    const records = await this.recordService.findByIds(recordIds);
+
+    if (records.length !== recordIds.length) {
+      throw new BadRequestException('One or more records not found');
+    }
+
+    const newOrder = await this.orderModel.create({
+      ...request,
+      items: this.mapItemsWithPrice(records, request.items),
+    });
+
     return newOrder.toObject();
   }
 
@@ -87,5 +108,35 @@ export class OrderService {
       count: total,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  // Helper, map and populate the records with their price
+  private mapItemsWithPrice(
+    records: RecordResponseDto[],
+    items: OrderItemDto[],
+  ) {
+    const recordMap = new Map(
+      records.map((record) => {
+        if (!record._id) {
+          throw new InternalServerErrorException('Record missing _id');
+        }
+
+        return [record._id?.toString(), record];
+      }),
+    );
+
+    return items.map((item) => {
+      const record = recordMap.get(item.record.toString());
+      if (!record) {
+        throw new BadRequestException(
+          `Record ${item.record} not found in order`,
+        );
+      }
+      return {
+        record: item.record,
+        quantity: item.quantity,
+        price: record.price,
+      };
+    });
   }
 }

@@ -20,6 +20,8 @@ export interface IOrder<T = Types.ObjectId> {
     createdAt: 'created',
     updatedAt: 'lastModified',
   },
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
 })
 export class Order extends Document implements IOrder<Types.ObjectId> {
   @Prop({ type: [OrderRecordItemSchema], required: true })
@@ -36,3 +38,7 @@ export const OrderSchema = SchemaFactory.createForClass(Order);
 // By records, we have this field specifically in service to search
 OrderSchema.index({ status: 1, created: -1 });
 OrderSchema.index({ 'items.record': 1 });
+
+OrderSchema.virtual('totalPrice').get(function () {
+  return this.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+});

@@ -46,10 +46,18 @@ export class RecordService {
     return updated.toObject();
   }
 
+  async findByIds(ids: string[]): Promise<RecordResponseDto[]> {
+    const records = await this.recordModel
+      .find({ _id: { $in: ids } })
+      .lean<RecordResponseDto[]>()
+      .exec();
+
+    return records;
+  }
+
   async findAll(
     filters: SearchRecordRequestDto,
   ): Promise<SearchRecordResponseDto> {
-    console.log(filters);
     const {
       id,
       query: textFilter,

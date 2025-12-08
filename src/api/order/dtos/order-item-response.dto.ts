@@ -13,4 +13,16 @@ export class OrderItemResponseDto
 
   @ApiProperty({ description: 'Quantity of this record', type: Number })
   quantity: number;
+
+  @ApiProperty({
+    description: 'Price of the record at time of order',
+    type: Number,
+  })
+  price: number;
+
+  @ApiProperty({
+    description: 'Total price for this item',
+    type: Number,
+  })
+  totalPrice: number;
 }
