@@ -12,12 +12,14 @@ import { SearchRecordResponseDto } from '../dtos/search-record.response.dto';
 import { UpdateRecordRequestDto } from '../dtos/update-record.request.dto';
 import { Record, RecordHydrated } from '../schemas/record.schema';
 import { PAGINATION_LIMIT_VALUE } from 'src/api/utils/settings/pagination-settings';
+import { TracklistSyncService } from 'src/workers/tracklist-sync/tracklist-sync.service';
 
 @Injectable()
 export class RecordService {
   constructor(
     @InjectModel(Record.name)
     private readonly recordModel: Model<RecordHydrated>,
+    private readonly tracklistSyncService: TracklistSyncService,
   ) {}
 
   async create(request: CreateRecordRequestDto) {
@@ -26,14 +28,20 @@ export class RecordService {
   }
 
   async update(id: string, request: UpdateRecordRequestDto) {
-    const updated = await this.recordModel.findByIdAndUpdate(id, request, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updated) {
+    const existing = await this.recordModel.findById(id);
+    if (!existing) {
       throw new NotFoundException('Record not found');
     }
+
+    // We only queue a job if we change the mbid
+    // If we didn't have a record but we add it
+    // or we change the mbid
+    if (request.mbid && (!existing.mbid || existing.mbid !== request.mbid)) {
+      await this.tracklistSyncService.queueSyncJob(id, request.mbid);
+    }
+
+    Object.assign(existing, request);
+    const updated = await existing.save();
 
     return updated.toObject();
   }
