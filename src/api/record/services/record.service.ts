@@ -11,6 +11,7 @@ import { SearchRecordRequestDto } from '../dtos/search-record.request.dto';
 import { SearchRecordResponseDto } from '../dtos/search-record.response.dto';
 import { UpdateRecordRequestDto } from '../dtos/update-record.request.dto';
 import { Record, RecordHydrated } from '../schemas/record.schema';
+import { PAGINATION_LIMIT_VALUE } from 'src/api/utils/settings/pagination-settings';
 
 @Injectable()
 export class RecordService {
@@ -42,6 +43,7 @@ export class RecordService {
   ): Promise<SearchRecordResponseDto> {
     console.log(filters);
     const {
+      id,
       query: textFilter,
       artist,
       album,
@@ -49,11 +51,15 @@ export class RecordService {
       category,
       price,
       mbid,
-      limit,
-      page,
+      limit = PAGINATION_LIMIT_VALUE,
+      page = 1,
     } = filters;
 
     const query: any = {};
+
+    if (id) {
+      query._id = id;
+    }
 
     // General query that matches artist, album
     if (textFilter) {

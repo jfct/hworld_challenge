@@ -44,4 +44,9 @@ export class SearchRecordRequestDto extends IntersectionType(
   @IsEnum(RecordFormat, { each: true })
   @IsOptional()
   format?: RecordFormat[];
+
+  @ApiPropertyOptional({ description: 'The id of the order' })
+  @IsOptional()
+  @IsString()
+  id?: string;
 }
