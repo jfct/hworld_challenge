@@ -14,7 +14,7 @@ export interface IRecord {
   category: RecordCategory;
   mbid?: string;
   tracks?: TrackInfo[];
-  tracksSyncedAt?: Date;
+  tracksSyncedAt?: string;
 }
 
 @Schema({
@@ -50,7 +50,7 @@ export class Record extends Document implements IRecord {
   tracks?: TrackInfo[];
 
   @Prop({ required: false })
-  tracksSyncedAt?: Date;
+  tracksSyncedAt?: string;
 }
 
 export const RecordSchema = SchemaFactory.createForClass(Record);

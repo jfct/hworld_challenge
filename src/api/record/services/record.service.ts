@@ -46,6 +46,10 @@ export class RecordService {
     return updated.toObject();
   }
 
+  async findById(id: string): Promise<RecordHydrated> {
+    return this.recordModel.findById(id).exec();
+  }
+
   async findByIds(ids: string[]): Promise<RecordResponseDto[]> {
     const records = await this.recordModel
       .find({ _id: { $in: ids } })
@@ -67,6 +71,7 @@ export class RecordService {
       category,
       price,
       mbid,
+      tracks,
       limit = PAGINATION_LIMIT_VALUE,
       page = 1,
     } = filters;
@@ -107,6 +112,10 @@ export class RecordService {
 
     if (mbid) {
       query.mbid = mbid;
+    }
+
+    if (tracks && tracks.length > 0) {
+      query['tracks.title'] = { $in: tracks };
     }
 
     try {

@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { RecordCategory, RecordFormat } from '../enums/record.enum';
 import { IRecord } from '../schemas/record.schema';
+import { BaseTrackInfoDto } from './base-track-info.dto';
 
 export class BaseRecordDto implements IRecord {
   @ApiProperty({
@@ -71,4 +72,10 @@ export class BaseRecordDto implements IRecord {
   })
   @IsOptional()
   mbid?: string;
+
+  @ApiPropertyOptional({ type: [BaseTrackInfoDto], required: false })
+  tracks?: BaseTrackInfoDto[];
+
+  @ApiPropertyOptional({ required: false })
+  tracksSyncedAt?: string;
 }

@@ -4,13 +4,21 @@ import {
   OmitType,
   PartialType,
 } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from '../../utils/dtos/pagination.dto';
 import { RecordCategory, RecordFormat } from '../enums/record.enum';
 import { BaseRecordDto } from './base-record.dto';
 
 export class SearchRecordRequestDto extends IntersectionType(
-  PartialType(OmitType(BaseRecordDto, ['format', 'category', 'qty'] as const)),
+  PartialType(
+    OmitType(BaseRecordDto, [
+      'format',
+      'category',
+      'qty',
+      'tracks',
+      'tracksSyncedAt',
+    ] as const),
+  ),
   PaginationDto,
 ) {
   @ApiPropertyOptional({
@@ -45,8 +53,16 @@ export class SearchRecordRequestDto extends IntersectionType(
   @IsOptional()
   format?: RecordFormat[];
 
-  @ApiPropertyOptional({ description: 'The id of the order' })
+  @ApiPropertyOptional({ description: 'The id of the order', type: String })
   @IsOptional()
   @IsString()
   id?: string;
+
+  @ApiPropertyOptional({
+    description: 'Search by a specific track in the album',
+    type: [String],
+  })
+  @IsArray()
+  @IsString()
+  tracks?: string[];
 }

@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Inject,
-  Param,
   Patch,
   Post,
   Query,
@@ -38,7 +37,7 @@ export class OrderController {
     return this.orderService.create(request);
   }
 
-  @Patch()
+  @Patch(':id')
   @ApiOperation({ summary: 'Updates an order' })
   @ApiBody({
     description: 'Payload with selected fields to update.',
@@ -51,7 +50,7 @@ export class OrderController {
   })
   @ApiResponse({ status: 404, description: 'Cant find order to update' })
   async update(
-    @Param('id') id: string,
+    @Query('id') id: string,
     @Body() request: UpdateOrderRequestDto,
   ) {
     return this.orderService.update(id, request);
@@ -69,7 +68,7 @@ export class OrderController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get all orders with optional filters' })
+  @ApiOperation({ summary: 'Search order by id' })
   @ApiResponse({
     status: 200,
     description: 'List of records',
