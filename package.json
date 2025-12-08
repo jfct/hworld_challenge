@@ -31,6 +31,7 @@
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.7",
     "mongoose": "^8.11.0",
+    "musicbrainz-api": "^0.27.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1"
