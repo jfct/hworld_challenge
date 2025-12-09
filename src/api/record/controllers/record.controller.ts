@@ -16,11 +16,14 @@ import { SearchRecordResponseDto } from '../dtos/search-record.response.dto';
 import { UpdateRecordRequestDto } from '../dtos/update-record.request.dto';
 import { Record } from '../schemas/record.schema';
 import { RecordService } from '../services/record.service';
+import { TracklistAdapterFactory } from 'src/clients/tracklist/adapters/tracklist-adapter.factory';
+import { AdapterType } from 'src/clients/tracklist/enums/adapter-type.enum';
 
 @Controller('records')
 export class RecordController {
   constructor(
     @Inject(RecordService) private readonly recordService: RecordService,
+    private readonly tracklistAdapterFactory: TracklistAdapterFactory,
   ) {}
 
   @Post()
@@ -67,5 +70,27 @@ export class RecordController {
   })
   async findAll(@Query() request: SearchRecordRequestDto) {
     return this.recordService.findAll(request);
+  }
+
+  // TODO: Remove, testing purposes only
+  @Get('/test-mbid/:mbid')
+  @ApiOperation({
+    summary: 'Test MusicBrainz ID lookup',
+    description:
+      'Fetches tracklist data directly from MusicBrainz API for testing purposes',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Tracklist data from MusicBrainz',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid MBID or MusicBrainz API error',
+  })
+  async testMbidLookup(@Param('mbid') mbid: string) {
+    const adapter = this.tracklistAdapterFactory.getAdapter(
+      AdapterType.HTTP_MUSICBRAINZ,
+    );
+    return adapter.getRecordTrackList(mbid);
   }
 }
