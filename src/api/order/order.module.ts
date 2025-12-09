@@ -12,5 +12,6 @@ import { RecordModule } from '../record/record.module';
   ],
   controllers: [OrderController],
   providers: [OrderService],
+  exports: [OrderService],
 })
 export class OrderModule {}

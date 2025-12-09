@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ClientSession } from 'mongoose';
 import { CreateRecordRequestDto } from '../dtos/create-record.request.dto';
 import { RecordResponseDto } from '../dtos/record-response.dto';
 import { SearchRecordRequestDto } from '../dtos/search-record.request.dto';
@@ -13,6 +13,7 @@ import { UpdateRecordRequestDto } from '../dtos/update-record.request.dto';
 import { Record, RecordHydrated } from '../schemas/record.schema';
 import { PAGINATION_LIMIT_VALUE } from 'src/api/utils/settings/pagination-settings';
 import { TracklistSyncService } from 'src/workers/tracklist-sync/tracklist-sync.service';
+import { InsufficientQuantityError } from '../errors/insufficient-quantity.error';
 
 @Injectable()
 export class RecordService {
@@ -66,6 +67,40 @@ export class RecordService {
       .exec();
 
     return records;
+  }
+
+  async decrementQuantity(
+    recordId: string,
+    quantity: number,
+    session: ClientSession,
+  ): Promise<void> {
+    const record = await this.recordModel
+      .findById(recordId)
+      .session(session)
+      .lean<RecordResponseDto>()
+      .exec();
+
+    if (!record) {
+      throw new NotFoundException(`Record ${recordId} not found`);
+    }
+
+    // Check if we have sufficient quantity before attempting the decrement
+    if (record.qty < quantity) {
+      throw new InsufficientQuantityError(record, quantity, record.qty);
+    }
+
+    const updated = await this.recordModel
+      .findByIdAndUpdate(
+        recordId,
+        { $inc: { qty: -quantity } },
+        { new: true, session },
+      )
+      .exec();
+
+    // Double-check for race conditions (quantity shouldn't go negative)
+    if (!updated || updated.qty < 0) {
+      throw new InsufficientQuantityError(record, quantity, record.qty);
+    }
   }
 
   async findAll(

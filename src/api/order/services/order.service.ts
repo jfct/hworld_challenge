@@ -4,8 +4,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectModel, InjectConnection } from '@nestjs/mongoose';
+import { Model, Connection } from 'mongoose';
 import { CreateOrderRequestDto } from '../dtos/create-order.request.dto';
 import { SearchOrderRequestDto } from '../dtos/search-order.request.dto';
 import { UpdateOrderRequestDto } from '../dtos/update-order.request.dto';
@@ -22,6 +22,8 @@ export class OrderService {
   constructor(
     @InjectModel(Order.name)
     private readonly orderModel: Model<OrderHydrated>,
+    @InjectConnection()
+    private readonly connection: Connection,
     private readonly recordService: RecordService,
   ) {}
 
@@ -34,12 +36,46 @@ export class OrderService {
       throw new BadRequestException('One or more records not found');
     }
 
-    const newOrder = await this.orderModel.create({
-      ...request,
-      items: this.mapItemsWithPrice(records, request.items),
-    });
+    // Validate and map items with price
+    const orderItems = this.mapItemsWithPrice(records, request.items);
 
-    return newOrder.toObject();
+    // Use a transaction to ensure atomicity
+    const session = await this.connection.startSession();
+    session.startTransaction();
+
+    try {
+      // Decrement the quantity for each record
+      for (const item of request.items) {
+        await this.recordService.decrementQuantity(
+          item.record.toString(),
+          item.quantity,
+          session,
+        );
+      }
+
+      // Create the order within the transaction
+      const [newOrder] = await this.orderModel.create(
+        [
+          {
+            ...request,
+            items: orderItems,
+          },
+        ],
+        { session },
+      );
+
+      // Commit the transaction
+      await session.commitTransaction();
+
+      return newOrder.toObject();
+    } catch (error) {
+      // Rollback on any error
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      // End the session
+      session.endSession();
+    }
   }
 
   async update(id: string, request: UpdateOrderRequestDto) {
@@ -90,8 +126,6 @@ export class OrderService {
 
     const findQuery = this.orderModel.find(query).skip(skip).limit(limit);
 
-    console.log('proj', projection);
-
     // Fill in the projections that we are requesting
     if (projection && projection.length > 0) {
       projection.map((value) => findQuery.populate(value));
@@ -127,11 +161,13 @@ export class OrderService {
 
     return items.map((item) => {
       const record = recordMap.get(item.record.toString());
+
       if (!record) {
         throw new BadRequestException(
           `Record ${item.record} not found in order`,
         );
       }
+
       return {
         record: item.record,
         quantity: item.quantity,
