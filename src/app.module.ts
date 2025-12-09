@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppConfig } from './app.config';
 import { RecordModule } from './api/record/record.module';
 import { OrderModule } from './api/order/order.module';
+import { AdminModule } from './api/admin/admin.module';
 import { WorkersModule } from './workers/workers.module';
 
 @Module({
@@ -11,6 +12,7 @@ import { WorkersModule } from './workers/workers.module';
     WorkersModule,
     RecordModule,
     OrderModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [],

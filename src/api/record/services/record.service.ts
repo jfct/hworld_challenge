@@ -24,6 +24,15 @@ export class RecordService {
 
   async create(request: CreateRecordRequestDto) {
     const newRecord = await this.recordModel.create(request);
+
+    if (newRecord) {
+      throw new InternalServerErrorException('Error creating record');
+    }
+
+    if (request.mbid) {
+      await this.tracklistSyncService.queueSyncJob(newRecord.id, request.mbid);
+    }
+
     return newRecord.toObject();
   }
 
