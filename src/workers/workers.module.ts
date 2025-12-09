@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bull';
+import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
 import { env } from 'process';
 import { TracklistSyncService } from './tracklist-sync/tracklist-sync.service';
 import { TracklistSyncProcessor } from './tracklist-sync/tracklist-sync.processor';
@@ -8,20 +9,15 @@ import { RecordModule } from 'src/api/record/record.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     BullModule.forRoot({
-      redis: {
+      connection: {
         host: env.REDIS_HOST || 'localhost',
         port: parseInt(env.REDIS_PORT || '6379'),
       },
     }),
     BullModule.registerQueue({
       name: 'tracklist-sync',
-      // This will be used to "respect" the rate limiter by MusicBrainz API
-      // They say 50/s, we can adapt if needed
-      limiter: {
-        max: 1,
-        duration: 1000,
-      },
     }),
     forwardRef(() => RecordModule),
     forwardRef(() => TrackListModule),

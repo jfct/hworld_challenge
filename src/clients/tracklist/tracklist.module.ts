@@ -10,6 +10,6 @@ import { TracklistAdapterFactory } from './adapters/tracklist-adapter.factory';
     HttpMusicBrainzAdapter,
     TracklistAdapterFactory,
   ],
-  exports: [TracklistService, TracklistAdapterFactory],
+  exports: [TracklistService, TracklistAdapterFactory, HttpMusicBrainzAdapter],
 })
 export class TrackListModule {}

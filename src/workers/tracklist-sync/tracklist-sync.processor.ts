@@ -1,20 +1,28 @@
-import { Processor, Process } from '@nestjs/bull';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable } from '@nestjs/common';
 import { TracklistAdapterFactory } from '../../clients/tracklist/adapters/tracklist-adapter.factory';
 import { TracklistSyncJobData } from './tracklist-sync.service';
 import { RecordService } from 'src/api/record/services/record.service';
 
-@Processor('tracklist-sync')
+// We are rate limiting "hard just because of the challenge, if we wanted we could of increased a bit
+// They have a limit of 50 per second
+@Processor('tracklist-sync', {
+  limiter: {
+    max: 1,
+    duration: 1000,
+  },
+})
 @Injectable()
-export class TracklistSyncProcessor {
+export class TracklistSyncProcessor extends WorkerHost {
   constructor(
     private readonly recordService: RecordService,
     private readonly adapterFactory: TracklistAdapterFactory,
-  ) {}
+  ) {
+    super();
+  }
 
-  @Process('sync-tracks')
-  async handleSyncTracks(job: Job<TracklistSyncJobData>) {
+  async process(job: Job<TracklistSyncJobData>) {
     const { recordId, mbid, adapterType } = job.data;
 
     try {
