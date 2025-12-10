@@ -51,3 +51,19 @@ docker run -d \
 ```
 
 I changed the replica set value initialization, I guess having localhost didn't feel right, for example this container when connecting to it would have issues, because it would get the response from the RS that the address was localhost, but localhost in this case is mongo express
+
+We can also add a redis insight to check the bullmq status
+
+```
+  redis-insight:
+    image: redis/redisinsight:latest
+    ports:
+      - '5540:5540'
+    volumes:
+      - redis-insight-data:/data
+    depends_on:
+      - redis
+
+volumes:
+  redis-insight-data:
+```
