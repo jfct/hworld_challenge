@@ -10,6 +10,25 @@ import { TracklistSyncJobData } from './tracklist-sync.service';
 describe('TracklistSyncProcessor', () => {
   let processor: TracklistSyncProcessor;
 
+  // Shared test data
+  const testRecordId = '507f1f77bcf86cd799439011';
+  const testMbid = 'mbid-123';
+
+  const mockTrackData = [
+    {
+      title: 'Track 1',
+      length: 180,
+      position: 1,
+      release_data: '2020-01-01',
+    },
+    {
+      title: 'Track 2',
+      length: 200,
+      position: 2,
+      release_data: '2020-01-01',
+    },
+  ];
+
   const mockRecordService = {
     findById: jest.fn(),
   };
@@ -47,8 +66,8 @@ describe('TracklistSyncProcessor', () => {
   describe('process', () => {
     it('should sync tracks when record has no tracks', async () => {
       const jobData: TracklistSyncJobData = {
-        recordId: '507f1f77bcf86cd799439011',
-        mbid: 'mbid-123',
+        recordId: testRecordId,
+        mbid: testMbid,
         adapterType: AdapterType.HTTP_MUSICBRAINZ,
       };
 
@@ -57,8 +76,8 @@ describe('TracklistSyncProcessor', () => {
       } as Job<TracklistSyncJobData>;
 
       const mockRecord = {
-        _id: '507f1f77bcf86cd799439011',
-        mbid: 'mbid-123',
+        _id: testRecordId,
+        mbid: testMbid,
         mbidStatus: undefined,
         tracks: [],
         tracksSyncedAt: undefined,
@@ -66,20 +85,7 @@ describe('TracklistSyncProcessor', () => {
       };
 
       const mockTracklistData = {
-        trackList: [
-          {
-            title: 'Track 1',
-            length: 180,
-            position: 1,
-            release_data: '2020-01-01',
-          },
-          {
-            title: 'Track 2',
-            length: 200,
-            position: 2,
-            release_data: '2020-01-01',
-          },
-        ],
+        trackList: mockTrackData,
       };
 
       mockRecordService.findById.mockResolvedValue(mockRecord);
@@ -89,7 +95,7 @@ describe('TracklistSyncProcessor', () => {
       const result = await processor.process(mockJob);
 
       expect(result.success).toBe(true);
-      expect(result.recordId).toBe('507f1f77bcf86cd799439011');
+      expect(result.recordId).toBe(testRecordId);
       expect(result.tracksCount).toBe(2);
       expect(mockRecord.save).toHaveBeenCalled();
       expect(mockRecord.tracks).toHaveLength(2);
@@ -99,9 +105,10 @@ describe('TracklistSyncProcessor', () => {
     });
 
     it('should sync tracks when MBID has changed', async () => {
+      const newMbid = 'mbid-new';
       const jobData: TracklistSyncJobData = {
-        recordId: '507f1f77bcf86cd799439011',
-        mbid: 'mbid-new',
+        recordId: testRecordId,
+        mbid: newMbid,
         adapterType: AdapterType.HTTP_MUSICBRAINZ,
       };
 
@@ -110,7 +117,7 @@ describe('TracklistSyncProcessor', () => {
       } as Job<TracklistSyncJobData>;
 
       const mockRecord = {
-        _id: '507f1f77bcf86cd799439011',
+        _id: testRecordId,
         mbid: 'mbid-old',
         mbidStatus: undefined,
         tracks: [{ title: 'Old Track' }],
@@ -135,15 +142,15 @@ describe('TracklistSyncProcessor', () => {
       const result = await processor.process(mockJob);
 
       expect(result.success).toBe(true);
-      expect(mockRecord.mbid).toBe('mbid-new');
+      expect(mockRecord.mbid).toBe(newMbid);
       expect(mockRecord.save).toHaveBeenCalled();
       expect(mockRecord.mbidStatus).toBe(MbidStatus.VALID);
     });
 
     it('should skip syncing when tracks exist and MBID matches', async () => {
       const jobData: TracklistSyncJobData = {
-        recordId: '507f1f77bcf86cd799439011',
-        mbid: 'mbid-123',
+        recordId: testRecordId,
+        mbid: testMbid,
         adapterType: AdapterType.HTTP_MUSICBRAINZ,
       };
 
@@ -152,8 +159,8 @@ describe('TracklistSyncProcessor', () => {
       } as Job<TracklistSyncJobData>;
 
       const mockRecord = {
-        _id: '507f1f77bcf86cd799439011',
-        mbid: 'mbid-123',
+        _id: testRecordId,
+        mbid: testMbid,
         tracks: [{ title: 'Existing Track' }],
         save: jest.fn(),
       };
@@ -170,8 +177,8 @@ describe('TracklistSyncProcessor', () => {
 
     it('should throw error when record not found', async () => {
       const jobData: TracklistSyncJobData = {
-        recordId: '507f1f77bcf86cd799439011',
-        mbid: 'mbid-123',
+        recordId: testRecordId,
+        mbid: testMbid,
         adapterType: AdapterType.HTTP_MUSICBRAINZ,
       };
 
@@ -187,9 +194,10 @@ describe('TracklistSyncProcessor', () => {
     });
 
     it('should set mbidStatus to INVALID when adapter fails', async () => {
+      const invalidMbid = 'mbid-invalid';
       const jobData: TracklistSyncJobData = {
-        recordId: '507f1f77bcf86cd799439011',
-        mbid: 'mbid-invalid',
+        recordId: testRecordId,
+        mbid: invalidMbid,
         adapterType: AdapterType.HTTP_MUSICBRAINZ,
       };
 
@@ -198,7 +206,7 @@ describe('TracklistSyncProcessor', () => {
       } as Job<TracklistSyncJobData>;
 
       const mockRecord = {
-        _id: '507f1f77bcf86cd799439011',
+        _id: testRecordId,
         mbid: 'mbid-old',
         mbidStatus: undefined,
         album: 'Test Album',
@@ -217,7 +225,7 @@ describe('TracklistSyncProcessor', () => {
         'Error handling track sync',
       );
       expect(mockRecord.mbidStatus).toBe(MbidStatus.INVALID);
-      expect(mockRecord.mbid).toBe('mbid-invalid');
+      expect(mockRecord.mbid).toBe(invalidMbid);
       expect(mockRecord.tracks).toBeNull();
       expect(mockRecord.tracksSyncedAt).toBeNull();
       expect(mockRecord.save).toHaveBeenCalled();

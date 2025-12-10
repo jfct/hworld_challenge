@@ -13,6 +13,24 @@ describe('OrderService', () => {
   let service: OrderService;
   let model: Model<OrderHydrated>;
 
+  // Shared test data
+  const testRecordId = '507f1f77bcf86cd799439011';
+  const testOrderId = '507f1f77bcf86cd799439012';
+
+  const mockRecordData = {
+    _id: testRecordId,
+    artist: 'The Beatles',
+    album: 'Abbey Road',
+    price: 30,
+    qty: 10,
+  };
+
+  const mockOrderItemData = {
+    record: testRecordId,
+    quantity: 2,
+    price: 30,
+  };
+
   const mockSession = {
     startTransaction: jest.fn().mockResolvedValue(undefined),
     commitTransaction: jest.fn().mockResolvedValue(undefined),
@@ -69,74 +87,40 @@ describe('OrderService', () => {
       const createDto: CreateOrderRequestDto = {
         items: [
           {
-            record: '507f1f77bcf86cd799439011' as any,
-            quantity: 2,
+            record: testRecordId as any,
+            quantity: mockOrderItemData.quantity,
           },
         ],
       };
 
-      const mockRecords = [
-        {
-          _id: '507f1f77bcf86cd799439011',
-          artist: 'The Beatles',
-          album: 'Abbey Road',
-          price: 30,
-          qty: 10,
-        },
-      ];
-
       const mockOrder = {
-        _id: '507f1f77bcf86cd799439012',
-        items: [
-          {
-            record: '507f1f77bcf86cd799439011',
-            quantity: 2,
-            price: 30,
-          },
-        ],
+        _id: testOrderId,
+        items: [mockOrderItemData],
         status: OrderStatus.PENDING,
         toObject: jest.fn().mockReturnValue({
-          _id: '507f1f77bcf86cd799439012',
-          items: [
-            {
-              record: '507f1f77bcf86cd799439011',
-              quantity: 2,
-              price: 30,
-            },
-          ],
+          _id: testOrderId,
+          items: [mockOrderItemData],
           status: OrderStatus.PENDING,
         }),
       };
 
-      mockRecordService.findByIds.mockResolvedValue(mockRecords);
+      mockRecordService.findByIds.mockResolvedValue([mockRecordData]);
       mockRecordService.decrementQuantity.mockResolvedValue(undefined);
       mockOrderModel.create.mockResolvedValue([mockOrder]);
 
       const result = await service.create(createDto);
 
-      expect(result._id).toBe('507f1f77bcf86cd799439012');
+      expect(result._id).toBe(testOrderId);
       expect(mockConnection.startSession).toHaveBeenCalled();
       expect(mockSession.startTransaction).toHaveBeenCalled();
-      expect(mockRecordService.findByIds).toHaveBeenCalledWith([
-        '507f1f77bcf86cd799439011',
-      ]);
+      expect(mockRecordService.findByIds).toHaveBeenCalledWith([testRecordId]);
       expect(mockRecordService.decrementQuantity).toHaveBeenCalledWith(
-        '507f1f77bcf86cd799439011',
-        2,
+        testRecordId,
+        mockOrderItemData.quantity,
         mockSession,
       );
       expect(mockOrderModel.create).toHaveBeenCalledWith(
-        [
-          {
-            items: [
-              {
-                record: '507f1f77bcf86cd799439011',
-                quantity: 2,
-                price: 30,
-              },
-            ],
-          },
-        ],
+        [{ items: [mockOrderItemData] }],
         { session: mockSession },
       );
       expect(mockSession.commitTransaction).toHaveBeenCalled();
@@ -147,8 +131,8 @@ describe('OrderService', () => {
       const createDto: CreateOrderRequestDto = {
         items: [
           {
-            record: '507f1f77bcf86cd799439011' as any,
-            quantity: 2,
+            record: testRecordId as any,
+            quantity: mockOrderItemData.quantity,
           },
         ],
       };
@@ -158,57 +142,51 @@ describe('OrderService', () => {
       await expect(service.create(createDto)).rejects.toThrow(
         BadRequestException,
       );
-      expect(mockRecordService.findByIds).toHaveBeenCalledWith([
-        '507f1f77bcf86cd799439011',
-      ]);
+      expect(mockRecordService.findByIds).toHaveBeenCalledWith([testRecordId]);
       expect(mockSession.startTransaction).not.toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
     it('should update an existing order', async () => {
-      const orderId = '507f1f77bcf86cd799439012';
       const updateDto: UpdateOrderRequestDto = {
         status: OrderStatus.SHIPPING,
       };
 
       const mockUpdated = {
-        _id: orderId,
-        customerName: 'John Doe',
+        _id: testOrderId,
+        items: [],
         status: OrderStatus.SHIPPING,
       };
 
-      const execMock = jest.fn().mockResolvedValue(mockUpdated);
       mockOrderModel.findByIdAndUpdate.mockReturnValue({
         lean: jest.fn().mockReturnValue({
-          exec: execMock,
+          exec: jest.fn().mockResolvedValue(mockUpdated),
         }),
       });
 
-      const result = await service.update(orderId, updateDto);
+      const result = await service.update(testOrderId, updateDto);
 
       expect(result).toEqual(mockUpdated);
       expect(model.findByIdAndUpdate).toHaveBeenCalledWith(
-        { _id: orderId },
+        { _id: testOrderId },
         updateDto,
         { new: true, runValidators: true },
       );
     });
 
     it('should throw NotFoundException when order not found', async () => {
-      const orderId = '507f1f77bcf86cd799439012';
       const updateDto: UpdateOrderRequestDto = {
         status: OrderStatus.SHIPPING,
       };
 
-      const execMock = jest.fn().mockResolvedValue(null);
       mockOrderModel.findByIdAndUpdate.mockReturnValue({
         lean: jest.fn().mockReturnValue({
-          exec: execMock,
+          exec: jest.fn().mockResolvedValue(null),
         }),
       });
 
-      await expect(service.update(orderId, updateDto)).rejects.toThrow(
+      await expect(service.update(testOrderId, updateDto)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -216,9 +194,8 @@ describe('OrderService', () => {
 
   describe('findById', () => {
     it('should find an order by id', async () => {
-      const orderId = '507f1f77bcf86cd799439012';
       const mockOrder = {
-        _id: orderId,
+        _id: testOrderId,
         items: [],
         status: OrderStatus.PENDING,
       };
@@ -227,14 +204,32 @@ describe('OrderService', () => {
         populate: jest.fn().mockResolvedValue(mockOrder),
       });
 
-      const result = await service.findById(orderId);
+      const result = await service.findById(testOrderId);
 
       expect(result).toEqual(mockOrder);
-      expect(model.findById).toHaveBeenCalledWith(orderId);
+      expect(model.findById).toHaveBeenCalledWith(testOrderId);
     });
   });
 
   describe('findAll', () => {
+    const createMockChain = (results: any[]) => {
+      const mockChain = {
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        populate: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(results),
+      };
+
+      return mockChain;
+    };
+
+    const mockBaseOrder = {
+      _id: testOrderId,
+      items: [],
+      status: OrderStatus.PENDING,
+    };
+
     it('should return paginated orders', async () => {
       const filters = {
         page: 1,
@@ -242,21 +237,8 @@ describe('OrderService', () => {
         status: OrderStatus.PENDING,
       };
 
-      const mockOrders = [
-        {
-          _id: '507f1f77bcf86cd799439012',
-          items: [],
-          status: OrderStatus.PENDING,
-        },
-      ];
-
-      const mockChain = {
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        populate: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(mockOrders),
-      };
+      const mockOrders = [mockBaseOrder];
+      const mockChain = createMockChain(mockOrders);
 
       mockOrderModel.find.mockReturnValue(mockChain);
       mockOrderModel.countDocuments.mockReturnValue({
@@ -284,21 +266,8 @@ describe('OrderService', () => {
         projection: ['items.record'] as any,
       };
 
-      const mockOrders = [
-        {
-          _id: '507f1f77bcf86cd799439012',
-          items: [],
-          status: OrderStatus.PENDING,
-        },
-      ];
-
-      const mockChain = {
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        populate: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(mockOrders),
-      };
+      const mockOrders = [mockBaseOrder];
+      const mockChain = createMockChain(mockOrders);
 
       mockOrderModel.find.mockReturnValue(mockChain);
       mockOrderModel.countDocuments.mockReturnValue({
