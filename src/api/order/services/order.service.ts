@@ -14,7 +14,6 @@ import {
 import { SearchOrderRequestDto } from '../dtos/search-order.request.dto';
 import { UpdateOrderRequestDto } from '../dtos/update-order.request.dto';
 import { Order, OrderHydrated } from '../schemas/order.schema';
-import { PAGINATION_LIMIT_VALUE } from 'src/api/utils/settings/pagination-settings';
 import { OrderResponseDto } from '../dtos/order-response.dto';
 import { SearchOrderResponseDto } from '../dtos/search-order.response.dto';
 import { RecordService } from 'src/api/record/services/record.service';
@@ -112,14 +111,7 @@ export class OrderService {
   async findAll(
     filters: SearchOrderRequestDto,
   ): Promise<SearchOrderResponseDto> {
-    const {
-      id,
-      page = 1,
-      limit = PAGINATION_LIMIT_VALUE,
-      status,
-      record,
-      projection,
-    } = filters;
+    const { id, page = 1, limit = 10, status, record, projection } = filters;
     const skip = (page - 1) * limit;
     const query: any = {};
 

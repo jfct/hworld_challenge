@@ -24,8 +24,15 @@ export class StatsService {
           totalRevenue: {
             $sum: { $multiply: ['$items.quantity', '$items.price'] },
           },
-          orderCount: { $sum: 1 },
+          orderCount: { $addToSet: '$_id' },
           totalItems: { $sum: '$items.quantity' },
+        },
+      },
+      {
+        $project: {
+          totalRevenue: 1,
+          orderCount: { $size: '$orderCount' },
+          totalItems: 1,
         },
       },
     ]);
