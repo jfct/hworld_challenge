@@ -8,6 +8,7 @@ import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from '../../utils/dtos/pagination.dto';
 import { RecordCategory, RecordFormat } from '../enums/record.enum';
 import { BaseRecordDto } from './base-record.dto';
+import { MbidStatus } from '../enums/mbid-status.enum';
 
 export class SearchRecordRequestDto extends IntersectionType(
   PartialType(
@@ -65,4 +66,12 @@ export class SearchRecordRequestDto extends IntersectionType(
   @IsArray()
   @IsString()
   tracks?: string[];
+
+  @ApiPropertyOptional({
+    description: 'Current status of the MBID',
+    enum: MbidStatus,
+  })
+  @IsEnum(MbidStatus)
+  @IsOptional()
+  mbidStatus?: MbidStatus;
 }

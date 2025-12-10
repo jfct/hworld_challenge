@@ -133,6 +133,7 @@ export class RecordService {
       price,
       mbid,
       tracks,
+      mbidStatus,
       limit = PAGINATION_LIMIT_VALUE,
       page = 1,
     } = filters;
@@ -170,6 +171,10 @@ export class RecordService {
 
     if (mbid) {
       query.mbid = mbid;
+    }
+
+    if (mbidStatus) {
+      query.mbidStatus = mbidStatus;
     }
 
     if (tracks && tracks.length > 0) {
