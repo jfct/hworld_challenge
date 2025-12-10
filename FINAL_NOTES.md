@@ -28,6 +28,7 @@ Small stuff like record service being empty, logic on the controller. Some ineff
 - Better logging, I skipped on this
 - Better docker setup, we could have a test docker compose, maybe test containers for e2e tests and more
 - Again we have redis here we could probably cache some queries but I don't feel this would impact much even with 100k records, maybe depending on how much traffice we're getting hit with I would consider it
+- We could add permissions / auth with JWT, definitely for the admin module
 
 ## Test Coverage
 
