@@ -40,7 +40,7 @@ export class Record extends Document implements IRecord {
   @Prop({ enum: RecordFormat, required: true })
   format: RecordFormat;
 
-  @Prop({ enum: RecordCategory, required: true })
+  @Prop({ enum: RecordCategory, required: true, index: true })
   category: RecordCategory;
 
   @Prop({ required: false, index: true })
@@ -59,7 +59,6 @@ export const RecordSchema = SchemaFactory.createForClass(Record);
 // Artist and category are the first of the composites so we can skip the
 // single key index for these
 RecordSchema.index({ artist: 1, album: 1, format: 1 }, { unique: true });
-RecordSchema.index({ category: 1, format: 1 });
 
 // Text index due to search query field
 RecordSchema.index(

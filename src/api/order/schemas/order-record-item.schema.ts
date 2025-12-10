@@ -31,7 +31,3 @@ export class OrderRecordItem
 
 export const OrderRecordItemSchema =
   SchemaFactory.createForClass(OrderRecordItem);
-
-OrderRecordItemSchema.virtual('totalPrice').get(function () {
-  return this.quantity * this.price;
-});
