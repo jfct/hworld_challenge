@@ -71,7 +71,6 @@ describe('OrderService', () => {
           {
             record: '507f1f77bcf86cd799439011' as any,
             quantity: 2,
-            price: undefined as any,
           },
         ],
       };
@@ -148,7 +147,6 @@ describe('OrderService', () => {
           {
             record: '507f1f77bcf86cd799439011' as any,
             quantity: 2,
-            price: undefined as any,
           },
         ],
       };
