@@ -7,10 +7,12 @@ import {
 } from '../src/api/record/enums/record.enum';
 import { AppModule } from '../src/app.module';
 
-describe('RecordController (e2e)', () => {
+describe('OrderController (e2e)', () => {
   let app: INestApplication;
   let recordId: string;
+  let orderId: string;
   let recordModel;
+  let orderModel;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -19,11 +21,11 @@ describe('RecordController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     recordModel = app.get('RecordModel');
+    orderModel = app.get('OrderModel');
     await app.init();
   });
 
-  // Test to create a record
-  it('should create a new record', async () => {
+  it('should create an order', async () => {
     const createRecordDto = {
       artist: 'The Beatles',
       album: 'Abbey Road',
@@ -33,40 +35,36 @@ describe('RecordController (e2e)', () => {
       category: RecordCategory.ROCK,
     };
 
-    const response = await request(app.getHttpServer())
+    const recordResponse = await request(app.getHttpServer())
       .post('/records')
       .send(createRecordDto)
       .expect(201);
 
-    recordId = response.body._id;
-    expect(response.body).toHaveProperty('artist', 'The Beatles');
-    expect(response.body).toHaveProperty('album', 'Abbey Road');
-  });
+    recordId = recordResponse.body._id;
 
-  it('should create a new record and fetch it with filters', async () => {
-    const createRecordDto = {
-      artist: 'The Fake Band',
-      album: 'Fake Album',
-      price: 25,
-      qty: 10,
-      format: RecordFormat.VINYL,
-      category: RecordCategory.ROCK,
+    const createOrderDto = {
+      items: [
+        {
+          record: recordId,
+          quantity: 2,
+        },
+      ],
     };
 
-    const createResponse = await request(app.getHttpServer())
-      .post('/records')
-      .send(createRecordDto)
+    const orderResponse = await request(app.getHttpServer())
+      .post('/orders')
+      .send(createOrderDto)
       .expect(201);
 
-    recordId = createResponse.body._id;
-
-    const response = await request(app.getHttpServer())
-      .get('/records/search?artist=The Fake Band')
-      .expect(200);
-    expect(response.body.results).toHaveLength(1);
-    expect(response.body.results[0]).toHaveProperty('artist', 'The Fake Band');
+    orderId = orderResponse.body._id;
+    expect(orderResponse.body).toHaveProperty('items');
+    expect(orderResponse.body.items).toHaveLength(1);
   });
+
   afterEach(async () => {
+    if (orderId) {
+      await orderModel.findByIdAndDelete(orderId);
+    }
     if (recordId) {
       await recordModel.findByIdAndDelete(recordId);
     }
