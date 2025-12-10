@@ -25,6 +25,17 @@ describe('RecordService', () => {
     queueSyncJob: jest.fn(),
   };
 
+  // Shared test data
+  const testRecordId = '507f1f77bcf86cd799439011';
+  const createRecordDto: CreateRecordRequestDto = {
+    artist: 'The Beatles',
+    album: 'Abbey Road',
+    price: 30,
+    qty: 10,
+    format: RecordFormat.VINYL,
+    category: RecordCategory.ROCK,
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -50,43 +61,26 @@ describe('RecordService', () => {
 
   describe('create', () => {
     it('should create a new record', async () => {
-      const createDto: CreateRecordRequestDto = {
-        artist: 'The Beatles',
-        album: 'Abbey Road',
-        price: 30,
-        qty: 10,
-        format: RecordFormat.VINYL,
-        category: RecordCategory.ROCK,
-      };
-
       const mockRecord = {
-        id: '507f1f77bcf86cd799439011',
+        _id: testRecordId,
+        ...createRecordDto,
         toObject: jest
           .fn()
-          .mockReturnValue({ _id: '507f1f77bcf86cd799439011', ...createDto }),
+          .mockReturnValue({ _id: testRecordId, ...createRecordDto }),
       };
 
       mockRecordModel.create.mockResolvedValue(mockRecord);
 
-      const result = await service.create(createDto);
+      const result = await service.create(createRecordDto);
 
-      expect(result._id).toBe('507f1f77bcf86cd799439011');
-      expect(model.create).toHaveBeenCalledWith(createDto);
+      expect(result._id).toBe(testRecordId);
+      expect(model.create).toHaveBeenCalledWith(createRecordDto);
     });
 
     it('should throw error when creation fails', async () => {
-      const createDto: CreateRecordRequestDto = {
-        artist: 'The Beatles',
-        album: 'Abbey Road',
-        price: 30,
-        qty: 10,
-        format: RecordFormat.VINYL,
-        category: RecordCategory.ROCK,
-      };
-
       mockRecordModel.create.mockResolvedValue(null);
 
-      await expect(service.create(createDto)).rejects.toThrow(
+      await expect(service.create(createRecordDto)).rejects.toThrow(
         'Error creating record',
       );
     });
@@ -94,149 +88,140 @@ describe('RecordService', () => {
 
   describe('update', () => {
     it('should update an existing record', async () => {
-      const recordId = '507f1f77bcf86cd799439011';
       const updateDto: UpdateRecordRequestDto = {
         price: 35,
         qty: 15,
       };
 
+      const updatedRecord = {
+        _id: testRecordId,
+        ...createRecordDto,
+        ...updateDto,
+      };
+
       const mockExisting = {
-        _id: recordId,
-        artist: 'The Beatles',
-        album: 'Abbey Road',
-        price: 30,
-        qty: 10,
+        _id: testRecordId,
+        ...createRecordDto,
         save: jest.fn().mockResolvedValue({
-          toObject: jest.fn().mockReturnValue({
-            _id: recordId,
-            artist: 'The Beatles',
-            album: 'Abbey Road',
-            price: 35,
-            qty: 15,
-          }),
+          toObject: jest.fn().mockReturnValue(updatedRecord),
         }),
       };
 
       mockRecordModel.findById.mockResolvedValue(mockExisting);
 
-      const result = await service.update(recordId, updateDto);
+      const result = await service.update(testRecordId, updateDto);
 
-      expect(result).toEqual({
-        _id: recordId,
-        artist: 'The Beatles',
-        album: 'Abbey Road',
-        price: 35,
-        qty: 15,
-      });
-      expect(model.findById).toHaveBeenCalledWith(recordId);
+      expect(result).toEqual(updatedRecord);
+      expect(model.findById).toHaveBeenCalledWith(testRecordId);
     });
 
     it('should throw NotFoundException when record does not exist', async () => {
-      const recordId = 'nonexistent-id';
       const updateDto: UpdateRecordRequestDto = {
         price: 35,
       };
 
       mockRecordModel.findById.mockResolvedValue(null);
 
-      await expect(service.update(recordId, updateDto)).rejects.toThrow(
+      await expect(service.update(testRecordId, updateDto)).rejects.toThrow(
         NotFoundException,
       );
-      expect(model.findById).toHaveBeenCalledWith(recordId);
+      expect(model.findById).toHaveBeenCalledWith(testRecordId);
     });
   });
 
   describe('findById', () => {
     it('should find a record by id', async () => {
-      const recordId = '507f1f77bcf86cd799439011';
       const mockRecord = {
-        _id: recordId,
-        artist: 'The Beatles',
-        album: 'Abbey Road',
+        _id: testRecordId,
+        ...createRecordDto,
       };
 
-      const execMock = jest.fn().mockResolvedValue(mockRecord);
-      mockRecordModel.findById.mockReturnValue({ exec: execMock });
+      mockRecordModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockRecord),
+      });
 
-      const result = await service.findById(recordId);
+      const result = await service.findById(testRecordId);
 
       expect(result).toEqual(mockRecord);
-      expect(model.findById).toHaveBeenCalledWith(recordId);
+      expect(model.findById).toHaveBeenCalledWith(testRecordId);
     });
 
     it('should return null when record not found', async () => {
-      const recordId = 'nonexistent-id';
+      mockRecordModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
 
-      const execMock = jest.fn().mockResolvedValue(null);
-      mockRecordModel.findById.mockReturnValue({ exec: execMock });
-
-      const result = await service.findById(recordId);
+      const result = await service.findById('nonexistent-id');
 
       expect(result).toBeNull();
     });
   });
 
   describe('decrementQuantity', () => {
-    it('should decrement quantity successfully', async () => {
-      const recordId = '507f1f77bcf86cd799439011';
-      const quantity = 5;
-      const mockSession = {} as any;
+    const mockSession = {} as any;
 
+    it('should decrement quantity successfully', async () => {
+      const quantity = 5;
       const mockRecord = {
-        _id: recordId,
+        _id: testRecordId,
         qty: 10,
       };
 
-      const mockUpdated = {
-        _id: recordId,
-        qty: 5,
-      };
-
-      const leanExecMock = jest.fn().mockResolvedValue(mockRecord);
       mockRecordModel.findById.mockReturnValue({
         session: jest.fn().mockReturnValue({
           lean: jest.fn().mockReturnValue({
-            exec: leanExecMock,
+            exec: jest.fn().mockResolvedValue(mockRecord),
           }),
         }),
       });
 
-      const updateExecMock = jest.fn().mockResolvedValue(mockUpdated);
       mockRecordModel.findByIdAndUpdate.mockReturnValue({
-        exec: updateExecMock,
+        exec: jest.fn().mockResolvedValue({ ...mockRecord, qty: 5 }),
       });
 
-      await service.decrementQuantity(recordId, quantity, mockSession);
+      await service.decrementQuantity(testRecordId, quantity, mockSession);
 
-      expect(model.findById).toHaveBeenCalledWith(recordId);
+      expect(model.findById).toHaveBeenCalledWith(testRecordId);
     });
 
     it('should throw InsufficientQuantityError when quantity is insufficient', async () => {
-      const recordId = '507f1f77bcf86cd799439011';
       const quantity = 15;
-      const mockSession = {} as any;
-
       const mockRecord = {
-        _id: recordId,
+        _id: testRecordId,
         qty: 10,
       };
 
-      const leanExecMock = jest.fn().mockResolvedValue(mockRecord);
       mockRecordModel.findById.mockReturnValue({
         session: jest.fn().mockReturnValue({
           lean: jest.fn().mockReturnValue({
-            exec: leanExecMock,
+            exec: jest.fn().mockResolvedValue(mockRecord),
           }),
         }),
       });
 
       await expect(
-        service.decrementQuantity(recordId, quantity, mockSession),
+        service.decrementQuantity(testRecordId, quantity, mockSession),
       ).rejects.toThrow(InsufficientQuantityError);
     });
   });
 
   describe('findAll', () => {
+    const createMockChain = (results: any[], count: number) => {
+      const mockChain = {
+        lean: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(results),
+        countDocuments: jest.fn().mockReturnThis(),
+      };
+
+      mockChain.countDocuments.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(count),
+      });
+
+      return mockChain;
+    };
+
     it('should return paginated records with filters', async () => {
       const filters = {
         artist: 'Beatles',
@@ -246,34 +231,18 @@ describe('RecordService', () => {
 
       const mockRecords = [
         {
-          _id: '507f1f77bcf86cd799439011',
-          artist: 'The Beatles',
-          album: 'Abbey Road',
-          price: 30,
-          qty: 10,
-          format: RecordFormat.VINYL,
-          category: RecordCategory.ROCK,
+          _id: testRecordId,
+          ...createRecordDto,
         },
       ];
 
-      const mockChain = {
-        lean: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(mockRecords),
-        countDocuments: jest.fn().mockReturnThis(),
-      };
-
-      mockChain.countDocuments.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(1),
-      });
-
-      mockRecordModel.find.mockReturnValue(mockChain);
+      mockRecordModel.find.mockReturnValue(createMockChain(mockRecords, 1));
 
       const result = await service.findAll(filters);
 
       expect(result.results).toEqual(mockRecords);
       expect(result.page).toBe(1);
+      expect(result.count).toBe(1);
     });
 
     it('should handle empty results', async () => {
@@ -281,19 +250,7 @@ describe('RecordService', () => {
         artist: 'NonExistent',
       };
 
-      const mockChain = {
-        lean: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([]),
-        countDocuments: jest.fn().mockReturnThis(),
-      };
-
-      mockChain.countDocuments.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(0),
-      });
-
-      mockRecordModel.find.mockReturnValue(mockChain);
+      mockRecordModel.find.mockReturnValue(createMockChain([], 0));
 
       const result = await service.findAll(filters);
 

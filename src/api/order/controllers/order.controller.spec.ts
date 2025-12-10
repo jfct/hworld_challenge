@@ -77,19 +77,28 @@ describe('OrderController', () => {
 
   describe('update', () => {
     it('should update an order and return the result', async () => {
-      // Arrange
-      const id = 'order-123';
+      const id = '507f1f77bcf86cd799439012';
       const updateDto: UpdateOrderRequestDto = {
-        /* ... mock properties ... */
-      } as any;
-      const resultDto: OrderResponseDto = { id, ...updateDto } as any;
+        status: OrderStatus.SHIPPING,
+      };
+      const resultDto: OrderResponseDto = {
+        _id: id,
+        status: OrderStatus.SHIPPING,
+        items: [
+          {
+            record: '507f1f77bcf86cd799439011',
+            quantity: 2,
+            price: 30,
+            totalPrice: 60,
+          },
+        ],
+        totalPrice: 60,
+      };
 
       mockOrderService.update.mockResolvedValue(resultDto);
 
-      // Act
       const result = await controller.update(id, updateDto);
 
-      // Assert
       expect(service.update).toHaveBeenCalledWith(id, updateDto);
       expect(result).toEqual(resultDto);
     });
@@ -97,18 +106,36 @@ describe('OrderController', () => {
 
   describe('findAll', () => {
     it('should return a list of orders based on filters', async () => {
-      // Arrange
       const filters: SearchOrderRequestDto = {
-        /* ... mock filters ... */
-      } as any;
-      const resultDto: OrderResponseDto[] = [{ id: '1' }] as any;
+        page: 1,
+        limit: 10,
+        status: OrderStatus.PENDING,
+      };
+      const resultDto = {
+        results: [
+          {
+            _id: '507f1f77bcf86cd799439012',
+            status: OrderStatus.PENDING,
+            items: [
+              {
+                record: '507f1f77bcf86cd799439011',
+                quantity: 2,
+                price: 30,
+                totalPrice: 60,
+              },
+            ],
+            totalPrice: 60,
+          },
+        ],
+        page: 1,
+        count: 1,
+        totalPages: 1,
+      };
 
       mockOrderService.findAll.mockResolvedValue(resultDto);
 
-      // Act
       const result = await controller.findAll(filters);
 
-      // Assert
       expect(service.findAll).toHaveBeenCalledWith(filters);
       expect(result).toEqual(resultDto);
     });
@@ -116,16 +143,25 @@ describe('OrderController', () => {
 
   describe('findById', () => {
     it('should find an order by id', async () => {
-      // Arrange
-      const id = 'order-123';
-      const resultDto: OrderResponseDto = { id } as any;
+      const id = '507f1f77bcf86cd799439012';
+      const resultDto: OrderResponseDto = {
+        _id: id,
+        status: OrderStatus.PENDING,
+        items: [
+          {
+            record: '507f1f77bcf86cd799439011',
+            quantity: 2,
+            price: 30,
+            totalPrice: 60,
+          },
+        ],
+        totalPrice: 60,
+      };
 
       mockOrderService.findById.mockResolvedValue(resultDto);
 
-      // Act
       const result = await controller.findById(id);
 
-      // Assert
       expect(service.findById).toHaveBeenCalledWith(id);
       expect(result).toEqual(resultDto);
     });

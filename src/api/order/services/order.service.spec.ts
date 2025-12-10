@@ -94,6 +94,7 @@ describe('OrderService', () => {
             price: 30,
           },
         ],
+        status: OrderStatus.PENDING,
         toObject: jest.fn().mockReturnValue({
           _id: '507f1f77bcf86cd799439012',
           items: [
@@ -103,6 +104,7 @@ describe('OrderService', () => {
               price: 30,
             },
           ],
+          status: OrderStatus.PENDING,
         }),
       };
 
@@ -217,8 +219,8 @@ describe('OrderService', () => {
       const orderId = '507f1f77bcf86cd799439012';
       const mockOrder = {
         _id: orderId,
-        customerName: 'John Doe',
         items: [],
+        status: OrderStatus.PENDING,
       };
 
       mockOrderModel.findById.mockReturnValue({
@@ -243,7 +245,7 @@ describe('OrderService', () => {
       const mockOrders = [
         {
           _id: '507f1f77bcf86cd799439012',
-          customerName: 'John Doe',
+          items: [],
           status: OrderStatus.PENDING,
         },
       ];
@@ -285,7 +287,8 @@ describe('OrderService', () => {
       const mockOrders = [
         {
           _id: '507f1f77bcf86cd799439012',
-          customerName: 'John Doe',
+          items: [],
+          status: OrderStatus.PENDING,
         },
       ];
 
