@@ -14,6 +14,7 @@ Small stuff like record service being empty, logic on the controller. Some ineff
 
 - I decided to retrieve the MBID track info through workers, so we don't have the risk of failing a call because musicbrainz api failed or taking too long.
   - Used BullMQ for this since it works together with nestjs (https://docs.nestjs.com/techniques/queues)
+  - Added an extra MBID status field, this way we can query/update/check-up later on for invalid MBIDs and scrape them, I feel this is a better choice than failing or having invalid MBIDs without any notice
 - Split up the folder structure, personally I prefer this way but I can work with both
 - I opted for a "multiple" record type of order, this means we would be able to support currently single orders or in the future `Cart` like operations where we keep adding items into it.
 - I tried to assume the most used indexes, added composite for the unique constraint given, also added text index for artist and album as that's what users will be "querying" to search text. Price is probably important too, due to range checks. This is mostly context based, depending on the analytics we have
