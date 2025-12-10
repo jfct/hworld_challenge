@@ -9,6 +9,7 @@ import {
   Min,
 } from 'class-validator';
 import { RecordCategory, RecordFormat } from '../enums/record.enum';
+import { MbidStatus } from '../enums/mbid-status.enum';
 import { IRecord } from '../schemas/record.schema';
 import { BaseTrackInfoDto } from './base-track-info.dto';
 
@@ -72,6 +73,15 @@ export class BaseRecordDto implements IRecord {
   })
   @IsOptional()
   mbid?: string;
+
+  @ApiPropertyOptional({
+    description: 'MBID validation status',
+    enum: MbidStatus,
+    example: MbidStatus.VALID,
+  })
+  @IsOptional()
+  @IsEnum(MbidStatus)
+  mbidStatus?: MbidStatus;
 
   @ApiPropertyOptional({ type: [BaseTrackInfoDto], required: false })
   tracks?: BaseTrackInfoDto[];

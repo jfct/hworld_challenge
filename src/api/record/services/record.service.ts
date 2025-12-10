@@ -13,6 +13,7 @@ import { RecordResponseDto } from '../dtos/record-response.dto';
 import { SearchRecordRequestDto } from '../dtos/search-record.request.dto';
 import { SearchRecordResponseDto } from '../dtos/search-record.response.dto';
 import { UpdateRecordRequestDto } from '../dtos/update-record.request.dto';
+import { MbidStatus } from '../enums/mbid-status.enum';
 import { InsufficientQuantityError } from '../errors/insufficient-quantity.error';
 import { Record, RecordHydrated } from '../schemas/record.schema';
 
@@ -56,6 +57,7 @@ export class RecordService {
     if (request.mbid && (!existing.mbid || existing.mbid !== request.mbid)) {
       existing.tracks = null;
       existing.tracksSyncedAt = null;
+      existing.mbidStatus = MbidStatus.PENDING;
 
       await this.tracklistSyncService.queueSyncJob(id, request.mbid);
     }
