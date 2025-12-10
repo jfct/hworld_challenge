@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { IOrderRecordItem } from '../schemas/order-record-item.schema';
 
-export class OrderItemDto implements IOrderRecordItem<string> {
+export class BaseOrderItemDto implements IOrderRecordItem<string> {
   @ApiProperty({
     description: 'The record id for this item',
     type: String,

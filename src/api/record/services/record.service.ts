@@ -1,22 +1,25 @@
 import {
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, ClientSession } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
+import { PAGINATION_LIMIT_VALUE } from 'src/api/utils/settings/pagination-settings';
+import { TracklistSyncService } from 'src/workers/tracklist-sync/tracklist-sync.service';
 import { CreateRecordRequestDto } from '../dtos/create-record.request.dto';
 import { RecordResponseDto } from '../dtos/record-response.dto';
 import { SearchRecordRequestDto } from '../dtos/search-record.request.dto';
 import { SearchRecordResponseDto } from '../dtos/search-record.response.dto';
 import { UpdateRecordRequestDto } from '../dtos/update-record.request.dto';
-import { Record, RecordHydrated } from '../schemas/record.schema';
-import { PAGINATION_LIMIT_VALUE } from 'src/api/utils/settings/pagination-settings';
-import { TracklistSyncService } from 'src/workers/tracklist-sync/tracklist-sync.service';
 import { InsufficientQuantityError } from '../errors/insufficient-quantity.error';
+import { Record, RecordHydrated } from '../schemas/record.schema';
 
 @Injectable()
 export class RecordService {
+  private readonly logger = new Logger(RecordService.name);
+
   constructor(
     @InjectModel(Record.name)
     private readonly recordModel: Model<RecordHydrated>,
@@ -34,6 +37,10 @@ export class RecordService {
       await this.tracklistSyncService.queueSyncJob(newRecord.id, request.mbid);
     }
 
+    this.logger.debug(
+      `A new record has been added! - ${request.album} by ${request.artist}`,
+    );
+
     return newRecord.toObject();
   }
 
@@ -47,10 +54,14 @@ export class RecordService {
     // If we didn't have a record but we add it
     // or we change the mbid
     if (request.mbid && (!existing.mbid || existing.mbid !== request.mbid)) {
+      existing.tracks = null;
+      existing.tracksSyncedAt = null;
+
       await this.tracklistSyncService.queueSyncJob(id, request.mbid);
     }
 
     Object.assign(existing, request);
+
     const updated = await existing.save();
 
     return updated.toObject();
@@ -96,6 +107,10 @@ export class RecordService {
         { new: true, session },
       )
       .exec();
+
+    this.logger.debug(
+      `Processing ${quantity} from ${record.album} (${record.artist}) - Current: ${updated.qty}`,
+    );
 
     // Double-check for race conditions (quantity shouldn't go negative)
     if (!updated || updated.qty < 0) {

@@ -2,11 +2,15 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/mongoose';
 import { Model, Connection } from 'mongoose';
-import { CreateOrderRequestDto } from '../dtos/create-order.request.dto';
+import {
+  CreateOrderItems,
+  CreateOrderRequestDto,
+} from '../dtos/create-order.request.dto';
 import { SearchOrderRequestDto } from '../dtos/search-order.request.dto';
 import { UpdateOrderRequestDto } from '../dtos/update-order.request.dto';
 import { Order, OrderHydrated } from '../schemas/order.schema';
@@ -15,10 +19,11 @@ import { OrderResponseDto } from '../dtos/order-response.dto';
 import { SearchOrderResponseDto } from '../dtos/search-order.response.dto';
 import { RecordService } from 'src/api/record/services/record.service';
 import { RecordResponseDto } from 'src/api/record/dtos/record-response.dto';
-import { OrderItemDto } from '../dtos/base-order-item.dto';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     @InjectModel(Order.name)
     private readonly orderModel: Model<OrderHydrated>,
@@ -67,8 +72,14 @@ export class OrderService {
       // Commit the transaction
       await session.commitTransaction();
 
+      this.logger.debug(
+        `New order processed - Value: ${orderItems.reduce((accumulator, value) => accumulator + value.price, 0)}`,
+      );
+
       return newOrder.toObject();
     } catch (error) {
+      this.logger.error(`A new order just failed`);
+
       // Rollback on any error
       await session.abortTransaction();
       throw error;
@@ -147,7 +158,7 @@ export class OrderService {
   // Helper, map and populate the records with their price
   private mapItemsWithPrice(
     records: RecordResponseDto[],
-    items: OrderItemDto[],
+    items: CreateOrderItems[],
   ) {
     const recordMap = new Map(
       records.map((record) => {

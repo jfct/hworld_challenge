@@ -68,4 +68,15 @@ export class RecordController {
   async findAll(@Query() request: SearchRecordRequestDto) {
     return this.recordService.findAll(request);
   }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a record by id' })
+  @ApiResponse({
+    status: 200,
+    description: 'Single record',
+    type: RecordResponseDto,
+  })
+  async findById(@Query('id') id: string) {
+    return this.recordService.findById(id);
+  }
 }

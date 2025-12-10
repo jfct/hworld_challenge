@@ -1,9 +1,9 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { Injectable } from '@nestjs/common';
+import { RecordService } from 'src/api/record/services/record.service';
 import { TracklistAdapterFactory } from '../../clients/tracklist/adapters/tracklist-adapter.factory';
 import { TracklistSyncJobData } from './tracklist-sync.service';
-import { RecordService } from 'src/api/record/services/record.service';
 
 // We are rate limiting "hard just because of the challenge, if we wanted we could of increased a bit
 // They have a limit of 50 per second
@@ -15,6 +15,8 @@ import { RecordService } from 'src/api/record/services/record.service';
 })
 @Injectable()
 export class TracklistSyncProcessor extends WorkerHost {
+  private readonly logger = new Logger(TracklistSyncProcessor.name);
+
   constructor(
     private readonly recordService: RecordService,
     private readonly adapterFactory: TracklistAdapterFactory,
@@ -50,6 +52,9 @@ export class TracklistSyncProcessor extends WorkerHost {
         record.tracksSyncedAt = new Date().toISOString();
 
         await record.save();
+        this.logger.debug(
+          `${adapterType} - completed sync for ${record.album} (mbid: ${mbid}) in record id: ${recordId}`,
+        );
       }
 
       return { success: true, recordId, tracksCount: record.tracks?.length };

@@ -36,7 +36,7 @@ export class BaseRecordDto implements IRecord {
   })
   @IsNumber()
   @Min(0)
-  @Max(10000)
+  @Max(100000)
   price: number;
 
   @ApiProperty({
@@ -46,7 +46,7 @@ export class BaseRecordDto implements IRecord {
   })
   @IsInt()
   @Min(0)
-  @Max(100)
+  @Max(99999)
   qty: number;
 
   @ApiProperty({
