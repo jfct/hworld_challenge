@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Job } from 'bullmq';
 import { RecordService } from 'src/api/record/services/record.service';
+import { MbidStatus } from 'src/api/record/enums/mbid-status.enum';
 import { TracklistAdapterFactory } from '../../clients/tracklist/adapters/tracklist-adapter.factory';
 import { AdapterType } from '../../clients/tracklist/enums/adapter-type.enum';
 import { TracklistSyncProcessor } from './tracklist-sync.processor';
@@ -58,6 +59,7 @@ describe('TracklistSyncProcessor', () => {
       const mockRecord = {
         _id: '507f1f77bcf86cd799439011',
         mbid: 'mbid-123',
+        mbidStatus: undefined,
         tracks: [],
         tracksSyncedAt: undefined,
         save: jest.fn().mockResolvedValue(true),
@@ -93,6 +95,7 @@ describe('TracklistSyncProcessor', () => {
       expect(mockRecord.tracks).toHaveLength(2);
       expect(mockRecord.tracks[0].title).toBe('Track 1');
       expect(mockRecord.tracksSyncedAt).toBeDefined();
+      expect(mockRecord.mbidStatus).toBe(MbidStatus.VALID);
     });
 
     it('should sync tracks when MBID has changed', async () => {
@@ -109,6 +112,7 @@ describe('TracklistSyncProcessor', () => {
       const mockRecord = {
         _id: '507f1f77bcf86cd799439011',
         mbid: 'mbid-old',
+        mbidStatus: undefined,
         tracks: [{ title: 'Old Track' }],
         save: jest.fn().mockResolvedValue(true),
       };
@@ -133,6 +137,7 @@ describe('TracklistSyncProcessor', () => {
       expect(result.success).toBe(true);
       expect(mockRecord.mbid).toBe('mbid-new');
       expect(mockRecord.save).toHaveBeenCalled();
+      expect(mockRecord.mbidStatus).toBe(MbidStatus.VALID);
     });
 
     it('should skip syncing when tracks exist and MBID matches', async () => {
@@ -179,6 +184,43 @@ describe('TracklistSyncProcessor', () => {
       await expect(processor.process(mockJob)).rejects.toThrow(
         'Error handling track sync',
       );
+    });
+
+    it('should set mbidStatus to INVALID when adapter fails', async () => {
+      const jobData: TracklistSyncJobData = {
+        recordId: '507f1f77bcf86cd799439011',
+        mbid: 'mbid-invalid',
+        adapterType: AdapterType.HTTP_MUSICBRAINZ,
+      };
+
+      const mockJob = {
+        data: jobData,
+      } as Job<TracklistSyncJobData>;
+
+      const mockRecord = {
+        _id: '507f1f77bcf86cd799439011',
+        mbid: 'mbid-old',
+        mbidStatus: undefined,
+        album: 'Test Album',
+        tracks: [],
+        tracksSyncedAt: undefined,
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      mockRecordService.findById.mockResolvedValue(mockRecord);
+      mockAdapterFactory.getAdapter.mockReturnValue(mockAdapter);
+      mockAdapter.getRecordTrackList.mockRejectedValue(
+        new Error('MBID not found'),
+      );
+
+      await expect(processor.process(mockJob)).rejects.toThrow(
+        'Error handling track sync',
+      );
+      expect(mockRecord.mbidStatus).toBe(MbidStatus.INVALID);
+      expect(mockRecord.mbid).toBe('mbid-invalid');
+      expect(mockRecord.tracks).toBeNull();
+      expect(mockRecord.tracksSyncedAt).toBeNull();
+      expect(mockRecord.save).toHaveBeenCalled();
     });
   });
 });
