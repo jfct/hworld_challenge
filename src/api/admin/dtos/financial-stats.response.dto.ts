@@ -27,36 +27,10 @@ export class StatusStatsDto {
   itemCount: number;
 }
 
-export class OverallStatsDto {
-  @ApiProperty({
-    description: 'Total revenue across all orders',
-    example: 5432.75,
-  })
-  totalRevenue: number;
-
-  @ApiProperty({
-    description: 'Total number of orders',
-    example: 87,
-  })
-  orderCount: number;
-
-  @ApiProperty({
-    description: 'Total items sold across all orders',
-    example: 234,
-  })
-  totalItemsSold: number;
-}
-
 export class FinancialStatsResponseDto {
   @ApiProperty({
     description: 'Statistics grouped by order status',
     type: [StatusStatsDto],
   })
   byStatus: StatusStatsDto[];
-
-  @ApiProperty({
-    description: 'Overall statistics across all orders',
-    type: OverallStatsDto,
-  })
-  overall: OverallStatsDto;
 }

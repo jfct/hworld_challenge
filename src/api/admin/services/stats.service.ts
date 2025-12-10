@@ -30,30 +30,6 @@ export class StatsService {
       },
     ]);
 
-    const overall = await this.orderModel.aggregate([
-      {
-        $unwind: '$items',
-      },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: {
-            $sum: { $multiply: ['$items.quantity', '$items.price'] },
-          },
-          orderCount: { $addToSet: '$_id' },
-          totalItemsSold: { $sum: '$items.quantity' },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          totalRevenue: 1,
-          orderCount: { $size: '$orderCount' },
-          totalItemsSold: 1,
-        },
-      },
-    ]);
-
     return {
       byStatus: stats.map((stat) => ({
         status: stat._id,
@@ -61,11 +37,6 @@ export class StatsService {
         orderCount: stat.orderCount,
         itemCount: stat.totalItems,
       })),
-      overall: overall[0] || {
-        totalRevenue: 0,
-        orderCount: 0,
-        totalItemsSold: 0,
-      },
     };
   }
 
