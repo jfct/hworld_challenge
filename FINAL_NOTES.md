@@ -32,3 +32,21 @@ Small stuff like record service being empty, logic on the controller. Some ineff
 
 - I have counted out the admin module, through the `jest-e2e` file as I consider the admin to be more of a "protytpe", internal tooling kind of module
 - We have around 70+ when we exclude the admin module, I think it's sufficient could of spent more time if I had to cover more cases
+
+## Docker
+
+I used mongo express in a separate container to help me check DB stuff
+
+```
+docker run -d \
+  --name mongo-express \
+  --network hworld_challenge_default \
+  -p 8081:8081 \
+  -e ME_CONFIG_MONGODB_URL="mongodb://mongodb:27017/?replicaSet=rs0" \
+  -e ME_CONFIG_MONGODB_ENABLE_ADMIN=true \
+  -e ME_CONFIG_BASICAUTH_USERNAME=admin \
+  -e ME_CONFIG_BASICAUTH_PASSWORD=pass \
+  mongo-express:latest
+```
+
+I changed the replica set value initialization, I guess having localhost didn't feel right, for example this container when connecting to it would have issues, because it would get the response from the RS that the address was localhost, but localhost in this case is mongo express
