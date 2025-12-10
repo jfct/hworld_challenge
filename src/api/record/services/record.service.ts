@@ -26,7 +26,7 @@ export class RecordService {
   async create(request: CreateRecordRequestDto) {
     const newRecord = await this.recordModel.create(request);
 
-    if (newRecord) {
+    if (!newRecord) {
       throw new InternalServerErrorException('Error creating record');
     }
 

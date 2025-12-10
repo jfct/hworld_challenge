@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   ITracklistAdapter,
   MusicBrainzSearchResult,
@@ -67,7 +67,7 @@ export class HttpMusicBrainzAdapter implements ITracklistAdapter {
           0,
       }));
     } catch (error) {
-      return [];
+      throw new InternalServerErrorException(`[MusicBrainzAPI]: ${error}`);
     }
   }
 
