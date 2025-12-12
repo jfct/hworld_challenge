@@ -8,6 +8,8 @@ import { FinancialStatsResponseDto } from '../dtos/financial-stats.response.dto'
 import { LowStockResponseDto } from '../dtos/low-stock.response.dto';
 import { GenerateBulkOrdersResponseDto } from '../dtos/generate-orders.response.dto';
 import { GenerateOrdersQueryDto } from '../dtos/generate-orders-query.dto';
+import { GenerateRecordsResponseDto } from '../dtos/generate-records.response.dto';
+import { GenerateRecordsQueryDto } from '../dtos/generate-records-query.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -118,5 +120,20 @@ export class AdminController {
     @Query() query: GenerateOrdersQueryDto,
   ): Promise<GenerateBulkOrdersResponseDto> {
     return this.adminService.generateRandomOrders(query.count);
+  }
+
+  @Post('/records/generate')
+  @ApiOperation({
+    summary: 'Generate random records',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Records generated successfully',
+    type: GenerateRecordsResponseDto,
+  })
+  async generateRecords(
+    @Query() query: GenerateRecordsQueryDto,
+  ): Promise<GenerateRecordsResponseDto> {
+    return this.adminService.generateRandomRecords(query.count);
   }
 }
