@@ -94,7 +94,7 @@ export class OrderService {
         new: true,
         runValidators: true,
       })
-      .lean<OrderResponseDto>()
+      .lean<OrderResponseDto>({ virtuals: true })
       .exec();
 
     if (!updated) {
@@ -135,7 +135,7 @@ export class OrderService {
     }
 
     const [results, total] = await Promise.all([
-      findQuery.lean<OrderResponseDto[]>().exec(),
+      findQuery.lean<OrderResponseDto[]>({ virtuals: true }).exec(),
       this.orderModel.countDocuments(query).exec(),
     ]);
 
