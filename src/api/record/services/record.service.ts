@@ -35,7 +35,13 @@ export class RecordService {
     }
 
     if (request.mbid) {
-      await this.tracklistSyncService.queueSyncJob(newRecord.id, request.mbid);
+      this.tracklistSyncService
+        .queueSyncJob(newRecord.id, request.mbid)
+        .catch((error) => {
+          this.logger.error(
+            `Failed to queue tracklist sync for record ${newRecord.id}: ${error.message}`,
+          );
+        });
     }
 
     this.logger.debug(
@@ -59,7 +65,13 @@ export class RecordService {
       existing.tracksSyncedAt = null;
       existing.mbidStatus = MbidStatus.PENDING;
 
-      await this.tracklistSyncService.queueSyncJob(id, request.mbid);
+      this.tracklistSyncService
+        .queueSyncJob(existing.id, request.mbid)
+        .catch((error) => {
+          this.logger.error(
+            `Failed to queue tracklist sync for record on update ${existing.id}: ${error.message}`,
+          );
+        });
     }
 
     Object.assign(existing, request);
@@ -87,37 +99,32 @@ export class RecordService {
     quantity: number,
     session: ClientSession,
   ): Promise<void> {
-    const record = await this.recordModel
-      .findById(recordId)
-      .session(session)
-      .lean<RecordResponseDto>()
-      .exec();
-
-    if (!record) {
-      throw new NotFoundException(`Record ${recordId} not found`);
-    }
-
-    // Check if we have sufficient quantity before attempting the decrement
-    if (record.qty < quantity) {
-      throw new InsufficientQuantityError(record, quantity, record.qty);
-    }
-
     const updated = await this.recordModel
-      .findByIdAndUpdate(
-        recordId,
+      .findOneAndUpdate(
+        { _id: recordId, qty: { $gte: quantity } },
         { $inc: { qty: -quantity } },
         { new: true, session },
       )
       .exec();
 
-    this.logger.debug(
-      `Processing ${quantity} from ${record.album} (${record.artist}) - Current: ${updated.qty}`,
-    );
+    if (!updated) {
+      // Need to determine if record doesn't exist OR insufficient quantity
+      const record = await this.recordModel
+        .findById(recordId)
+        .session(session)
+        .lean<RecordResponseDto>()
+        .exec();
 
-    // Double-check for race conditions (quantity shouldn't go negative)
-    if (!updated || updated.qty < 0) {
+      if (!record) {
+        throw new NotFoundException(`Record ${recordId} not found`);
+      }
+
       throw new InsufficientQuantityError(record, quantity, record.qty);
     }
+
+    this.logger.debug(
+      `Processing ${quantity} from ${updated.album} (${updated.artist}) - Current: ${updated.qty}`,
+    );
   }
 
   async findAll(
