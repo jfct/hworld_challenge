@@ -19,6 +19,7 @@ describe('RecordService', () => {
     findById: jest.fn(),
     find: jest.fn(),
     findByIdAndUpdate: jest.fn(),
+    findOneAndUpdate: jest.fn(),
   };
 
   const mockTracklistSyncService = {
@@ -167,21 +168,17 @@ describe('RecordService', () => {
         qty: 10,
       };
 
-      mockRecordModel.findById.mockReturnValue({
-        session: jest.fn().mockReturnValue({
-          lean: jest.fn().mockReturnValue({
-            exec: jest.fn().mockResolvedValue(mockRecord),
-          }),
-        }),
-      });
-
-      mockRecordModel.findByIdAndUpdate.mockReturnValue({
+      mockRecordModel.findOneAndUpdate.mockReturnValue({
         exec: jest.fn().mockResolvedValue({ ...mockRecord, qty: 5 }),
       });
 
       await service.decrementQuantity(testRecordId, quantity, mockSession);
 
-      expect(model.findById).toHaveBeenCalledWith(testRecordId);
+      expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: testRecordId, qty: { $gte: quantity } },
+        { $inc: { qty: -quantity } },
+        { new: true, session: mockSession },
+      );
     });
 
     it('should throw InsufficientQuantityError when quantity is insufficient', async () => {
@@ -191,6 +188,12 @@ describe('RecordService', () => {
         qty: 10,
       };
 
+      // First findOneAndUpdate returns null (insufficient quantity)
+      mockRecordModel.findOneAndUpdate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      // Then findById is called to check if record exists
       mockRecordModel.findById.mockReturnValue({
         session: jest.fn().mockReturnValue({
           lean: jest.fn().mockReturnValue({
